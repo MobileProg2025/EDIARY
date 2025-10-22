@@ -236,14 +236,14 @@ const styles = StyleSheet.create({
   },
   brandText: {
     fontSize: 24,
-    fontWeight: "700",
     color: "#161616",
+    fontWeight: "700",
   },
   greeting: {
     fontSize: 24,
-    fontWeight: "700",
     color: "#3C3148",
     textAlign: "center",
+    fontWeight: "700",
   },
   calendarCard: {
     backgroundColor: "#FEFEFC",
@@ -269,8 +269,8 @@ const styles = StyleSheet.create({
   monthLabel: {
     textAlign: "center",
     fontSize: 16,
-    fontWeight: "600",
     color: "#3C3148",
+    fontWeight: "600",
   },
   monthNav: {
     width: 32,
@@ -286,8 +286,8 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "center",
     fontSize: 13,
-    fontWeight: "600",
     color: "#7E7874",
+    fontWeight: "500",
   },
   datesGrid: {
     gap: 8,
@@ -327,8 +327,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: "700",
     color: "#3C3148",
+    fontWeight: "600",
   },
   card: {
     backgroundColor: "#FEFEFC",
@@ -342,6 +342,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#C0B7AF",
     textAlign: "center",
+    fontWeight: "500",
   },
   icon: {
     marginTop: 6,

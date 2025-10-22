@@ -35,7 +35,6 @@ const LABEL_LINE_HEIGHT = 14;
 const NAV_HEIGHT =
   NAV_VERTICAL_PADDING * 2 + ICON_SIZE + LABEL_TOP_MARGIN + LABEL_LINE_HEIGHT;
 const POST_BUTTON_BOTTOM_OFFSET = NAV_HEIGHT - POST_BUTTON_SIZE / 2;
-
 function CustomTabBar({
   state,
   descriptors,
@@ -71,6 +70,8 @@ function CustomTabBar({
     const routeIndex = state.routes.findIndex((item) => item.key === route.key);
     const isFocused = state.index === routeIndex;
     const { options } = descriptors[route.key];
+    const { tabBarTestID } =
+      options as typeof options & { tabBarTestID?: string };
     const meta = TAB_META[route.name];
     const label =
       options.tabBarLabel ??
@@ -102,7 +103,7 @@ function CustomTabBar({
         accessibilityRole="button"
         accessibilityState={isFocused ? { selected: true } : {}}
         accessibilityLabel={options.tabBarAccessibilityLabel}
-        testID={options.tabBarTestID}
+        testID={tabBarTestID}
         activeOpacity={0.85}
         onPress={() => handlePress(route.name, routeIndex)}
         onLongPress={() => handleLongPress(route.name, routeIndex)}
@@ -271,8 +272,8 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 11,
-    fontWeight: "600",
     marginTop: 4,
+    fontWeight: "600",
   },
   icon: {
     marginTop: 6,

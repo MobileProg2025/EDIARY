@@ -143,13 +143,13 @@ const styles = StyleSheet.create({
   },
   brandText: {
     fontSize: 24,
-    fontWeight: "700",
     color: "#161616",
+    fontWeight: "700",
   },
   title: {
     fontSize: 24,
-    fontWeight: "700",
     color: "#3C3148",
+    fontWeight: "700",
   },
   searchField: {
     flexDirection: "row",
@@ -179,6 +179,7 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: "#B6ABA2",
+    fontWeight: "500",
   },
   entryCard: {
     flexDirection: "row",
@@ -216,8 +217,8 @@ const styles = StyleSheet.create({
   },
   entryTitle: {
     fontSize: 16,
-    fontWeight: "600",
     color: "#3C3148",
+    fontWeight: "600",
   },
   entryActions: {
     flexDirection: "row",
