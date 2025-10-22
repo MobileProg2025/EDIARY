@@ -8,14 +8,45 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Login() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    if (error) {
+      setError("");
+    }
+  };
+
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+    if (error) {
+      setError("");
+    }
+  };
+
+  const handleLogin = () => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const isAdminEmail =
+      normalizedEmail === "admin" || normalizedEmail === "admin@admin.com";
+    const isAdminPassword = password === "admin";
+
+    if (isAdminEmail && isAdminPassword) {
+      setError("");
+      router.replace("/home");
+      return;
+    }
+
+    setError("Use admin / admin to sign in.");
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -40,7 +71,7 @@ export default function Login() {
               placeholder="abc12@gmail.com"
               placeholderTextColor="#9B9B9B"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={handleEmailChange}
               keyboardType="email-address"
               autoCapitalize="none"
             />
@@ -54,7 +85,7 @@ export default function Login() {
               placeholder="************"
               placeholderTextColor="#9B9B9B"
               value={password}
-              onChangeText={setPassword}
+              onChangeText={handlePasswordChange}
               secureTextEntry={!showPassword}
             />
             <TouchableOpacity
@@ -73,9 +104,14 @@ export default function Login() {
             <Text style={styles.forgotText}>Forgot Password?</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.primaryButton, styles.loginButton]}>
+          <TouchableOpacity
+            style={[styles.primaryButton, styles.loginButton]}
+            onPress={handleLogin}
+          >
             <Text style={styles.primaryButtonText}>Log in</Text>
           </TouchableOpacity>
+
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
           <View style={styles.bottomPrompt}>
             <Text style={styles.promptText}>Don&apos;t have an account? </Text>
@@ -179,6 +215,13 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  errorText: {
+    marginTop: 12,
+    textAlign: "center",
+    color: "#C03221",
+    fontSize: 13,
+    fontWeight: "500",
   },
   bottomPrompt: {
     flexDirection: "row",
