@@ -1,9 +1,32 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Index() {
   const router = useRouter();
+  const [showContent, setShowContent] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowContent(true);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [fadeAnim]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -13,21 +36,25 @@ export default function Index() {
           style={styles.logo}
           resizeMode="contain"
         />
-        <Text style={styles.tagline}>Your story starts here</Text>
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={[styles.button, styles.loginButton]}
-            onPress={() => router.push("/login")}
-          >
-            <Text style={styles.buttonText}>Login</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, styles.signupButton]}
-            onPress={() => router.push("/signup")}
-          >
-            <Text style={styles.buttonText}>SignUp</Text>
-          </TouchableOpacity>
-        </View>
+        {showContent && (
+          <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+            <Text style={styles.tagline}>Your story starts here</Text>
+            <View style={styles.actions}>
+              <TouchableOpacity
+                style={[styles.button, styles.loginButton]}
+                onPress={() => router.push("/login")}
+              >
+                <Text style={styles.buttonText}>Login</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, styles.signupButton]}
+                onPress={() => router.push("/signup")}
+              >
+                <Text style={styles.buttonText}>SignUp</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -44,6 +71,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 32,
     backgroundColor: "#F8F4F1",
+  },
+  content: {
+    alignItems: "center",
+    width: "100%",
   },
   logo: {
     width: 160,
