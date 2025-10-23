@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -8,17 +7,102 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../../../context/auth-context";
 
 export default function PersonalDetailsScreen() {
-  const router = useRouter();
-  const [firstName, setFirstName] = useState("Ken Louie");
-  const [lastName, setLastName] = useState("Neri");
-  const [email, setEmail] = useState("nerikenlouie@gmail.com");
-  const [phoneNumber, setPhoneNumber] = useState("09057361308");
+  const { user, updateProfile } = useAuth();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleUpdate = () => {
-    router.back();
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    setFirstName(user.firstName ?? "");
+    setLastName(user.lastName ?? "");
+    setEmail(user.email ?? "");
+    setPhoneNumber(user.phoneNumber ?? "");
+  }, [user]);
+
+  const handleFirstNameChange = (value) => {
+    setFirstName(value);
+    if (error) {
+      setError("");
+    }
+    if (message) {
+      setMessage("");
+    }
+  };
+
+  const handleLastNameChange = (value) => {
+    setLastName(value);
+    if (error) {
+      setError("");
+    }
+    if (message) {
+      setMessage("");
+    }
+  };
+
+  const handleEmailChange = (value) => {
+    setEmail(value);
+    if (error) {
+      setError("");
+    }
+    if (message) {
+      setMessage("");
+    }
+  };
+
+  const handlePhoneChange = (value) => {
+    setPhoneNumber(value);
+    if (error) {
+      setError("");
+    }
+    if (message) {
+      setMessage("");
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (isSaving) {
+      return;
+    }
+
+    if (!email.trim()) {
+      setError("Email is required.");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setError("");
+      setMessage("");
+
+      await updateProfile({
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+      });
+
+      setMessage("Details updated successfully.");
+    } catch (updateError) {
+      const info =
+        updateError instanceof Error
+          ? updateError.message
+          : "Failed to update details.";
+      setError(info);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -34,52 +118,62 @@ export default function PersonalDetailsScreen() {
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Name</Text>
           <TextInput
-            value={firstName}
-            onChangeText={setFirstName}
             style={styles.input}
             placeholder="Name"
             placeholderTextColor="#C0B7AF"
+            value={firstName}
+            onChangeText={handleFirstNameChange}
           />
         </View>
 
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Last Name</Text>
           <TextInput
-            value={lastName}
-            onChangeText={setLastName}
             style={styles.input}
             placeholder="Last Name"
             placeholderTextColor="#C0B7AF"
+            value={lastName}
+            onChangeText={handleLastNameChange}
           />
         </View>
 
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Email</Text>
           <TextInput
-            value={email}
-            onChangeText={setEmail}
             style={styles.input}
             placeholder="Email"
             keyboardType="email-address"
             autoCapitalize="none"
             placeholderTextColor="#C0B7AF"
+            value={email}
+            onChangeText={handleEmailChange}
           />
         </View>
 
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Phone Number</Text>
           <TextInput
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
             style={styles.input}
             placeholder="Phone Number"
             keyboardType="phone-pad"
             placeholderTextColor="#C0B7AF"
+            value={phoneNumber}
+            onChangeText={handlePhoneChange}
           />
         </View>
 
-        <TouchableOpacity style={styles.button} activeOpacity={0.85} onPress={handleUpdate}>
-          <Text style={styles.buttonText}>Update</Text>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        {message ? <Text style={styles.messageText}>{message}</Text> : null}
+
+        <TouchableOpacity
+          style={styles.button}
+          activeOpacity={0.85}
+          onPress={handleUpdate}
+          disabled={isSaving}
+        >
+          <Text style={styles.buttonText}>
+            {isSaving ? "Saving..." : "Update"}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -147,5 +241,17 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "700",
     letterSpacing: 0.5,
+  },
+  errorText: {
+    fontSize: 13,
+    color: "#C03221",
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  messageText: {
+    fontSize: 13,
+    color: "#2E7D32",
+    fontWeight: "500",
+    textAlign: "center",
   },
 });

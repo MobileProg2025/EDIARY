@@ -1,7 +1,8 @@
-import { SafeAreaView } from "react-native-safe-area-context";
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useMemo } from "react";
 import { useDiary } from "../../context/diary-context";
+import { useAuth } from "../../context/auth-context";
 
 const STAT_META = [
   { label: "Total Entries", color: "#E9E2D7", key: "totalEntries" },
@@ -22,6 +23,7 @@ const countWords = (text) =>
 export default function ProfileScreen() {
   const { width } = useWindowDimensions();
   const { entries } = useDiary();
+  const { user } = useAuth();
 
   const stats = useMemo(() => {
     if (!entries.length) {
@@ -109,6 +111,29 @@ export default function ProfileScreen() {
     return [values.slice(0, 2), values.slice(2, 4)];
   }, [stats]);
 
+  const displayName = useMemo(() => {
+    if (!user) {
+      return "Your Profile";
+    }
+
+    const first = user.firstName?.trim();
+    const last = user.lastName?.trim();
+    const fullName = [first, last].filter(Boolean).join(" ").trim();
+
+    if (fullName) {
+      return fullName;
+    }
+
+    if (user.email) {
+      return user.email;
+    }
+
+    return "Your Profile";
+  }, [user]);
+
+  const displayEmail = user?.email ?? "Add your email";
+  const displayPhone = user?.phoneNumber?.trim() ?? "";
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -122,8 +147,9 @@ export default function ProfileScreen() {
           <View style={styles.avatarBody} />
         </View>
 
-        <Text style={styles.name}>Ken Louie Neri</Text>
-        <Text style={styles.email}>nerikenlouie@gmail.com</Text>
+        <Text style={styles.name}>{displayName}</Text>
+        <Text style={styles.email}>{displayEmail}</Text>
+        {displayPhone ? <Text style={styles.phone}>{displayPhone}</Text> : null}
 
         <View style={styles.statsGrid}>
           {statRows.map((row, rowIndex) => (
@@ -209,6 +235,11 @@ const styles = StyleSheet.create({
   email: {
     fontSize: 14,
     color: "#7E7874",
+    letterSpacing: 0.2,
+  },
+  phone: {
+    fontSize: 13,
+    color: "#A29C97",
     letterSpacing: 0.2,
   },
   statsGrid: {

@@ -9,11 +9,19 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../context/auth-context";
 
 export default function Index() {
   const router = useRouter();
   const [showContent, setShowContent] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const { isAuthenticated, initializing } = useAuth();
+
+  useEffect(() => {
+    if (!initializing && isAuthenticated) {
+      router.replace("/home");
+    }
+  }, [initializing, isAuthenticated, router]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

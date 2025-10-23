@@ -1,6 +1,7 @@
 import { useEffect } from "react";
-import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { Stack } from "expo-router";
+import { AuthProvider } from "../context/auth-context";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -10,11 +11,13 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="login" />
-      <Stack.Screen name="signup" />
-      <Stack.Screen name="(tabs)" />
-    </Stack>
+    <AuthProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="login" />
+        <Stack.Screen name="signup" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+    </AuthProvider>
   );
 }

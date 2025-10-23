@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useDiary } from "../../context/diary-context";
+import { useAuth } from "../../context/auth-context";
 
 const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const DAY_SIZE = 40;
@@ -75,6 +76,7 @@ const formatEntryTimestamp = (value) => {
 
 export default function HomeScreen() {
   const { entries } = useDiary();
+  const { user } = useAuth();
   const [visibleMonth, setVisibleMonth] = useState(
     () => new Date(normalisedToday.getFullYear(), normalisedToday.getMonth(), 1),
   );
@@ -116,6 +118,25 @@ export default function HomeScreen() {
     () => selectedEntries.slice(0, 1),
     [selectedEntries],
   );
+
+  const greetingName = useMemo(() => {
+    if (!user) {
+      return "there";
+    }
+
+    const first = user.firstName?.trim();
+    const last = user.lastName?.trim();
+    if (first || last) {
+      return [first, last].filter(Boolean).join(" ");
+    }
+
+    if (user.email) {
+      const [localPart] = user.email.split("@");
+      return localPart || "there";
+    }
+
+    return "there";
+  }, [user]);
 
   const recentEntriesDisplay = showAllRecent
     ? sortedEntries
@@ -219,7 +240,7 @@ export default function HomeScreen() {
             />
             <Text style={styles.brandText}>eDiary</Text>
           </View>
-          <Text style={styles.greeting}>Hello, Ken Louie</Text>
+          <Text style={styles.greeting}>Hello, {greetingName}</Text>
         </View>
 
         <View style={styles.calendarCard}>

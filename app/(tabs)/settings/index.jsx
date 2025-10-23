@@ -10,11 +10,28 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useAuth } from "../../../context/auth-context";
 
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [selectedTheme, setSelectedTheme] = useState("light");
   const router = useRouter();
+  const { logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) {
+      return;
+    }
+
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      router.replace("/login");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -121,9 +138,13 @@ export default function SettingsScreen() {
             <TouchableOpacity
               activeOpacity={0.8}
               style={[styles.row, styles.choiceRow]}
+              onPress={handleLogout}
+              disabled={isLoggingOut}
             >
               <Ionicons name="log-out" size={18} color="#FFA36C" />
-              <Text style={styles.cardPrimary}>Log out</Text>
+              <Text style={styles.cardPrimary}>
+                {isLoggingOut ? "Logging out..." : "Log out"}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -226,4 +247,3 @@ const styles = StyleSheet.create({
     backgroundColor: "#3C3148",
   },
 });
-

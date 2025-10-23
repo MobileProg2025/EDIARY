@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Image,
   ScrollView,
@@ -11,6 +11,7 @@ import {
 import { Link, useRouter } from "expo-router";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../context/auth-context";
 
 export default function Login() {
   const router = useRouter();
@@ -18,6 +19,14 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login, isAuthenticated, initializing } = useAuth();
+
+  useEffect(() => {
+    if (!initializing && isAuthenticated) {
+      router.replace("/home");
+    }
+  }, [initializing, isAuthenticated, router]);
 
   const handleEmailChange = (value) => {
     setEmail(value);
@@ -33,19 +42,23 @@ export default function Login() {
     }
   };
 
-  const handleLogin = () => {
-    const normalizedEmail = email.trim().toLowerCase();
-    const isAdminEmail =
-      normalizedEmail === "admin" || normalizedEmail === "admin@admin.com";
-    const isAdminPassword = password === "admin";
-
-    if (isAdminEmail && isAdminPassword) {
-      setError("");
-      router.replace("/home");
+  const handleLogin = async () => {
+    if (isSubmitting) {
       return;
     }
 
-    setError("Use admin / admin to sign in.");
+    try {
+      setIsSubmitting(true);
+      await login({ email, password });
+      setError("");
+      router.replace("/home");
+    } catch (loginError) {
+      const message =
+        loginError instanceof Error ? loginError.message : "Failed to log in.";
+      setError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -107,8 +120,11 @@ export default function Login() {
           <TouchableOpacity
             style={[styles.primaryButton, styles.loginButton]}
             onPress={handleLogin}
+            disabled={isSubmitting}
           >
-            <Text style={styles.primaryButtonText}>Log in</Text>
+            <Text style={styles.primaryButtonText}>
+              {isSubmitting ? "Logging in..." : "Log in"}
+            </Text>
           </TouchableOpacity>
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}

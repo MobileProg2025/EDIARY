@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Image,
   ScrollView,
@@ -8,17 +8,99 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../context/auth-context";
 
 export default function Signup() {
+  const router = useRouter();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { signup, isAuthenticated, initializing } = useAuth();
+
+  useEffect(() => {
+    if (!initializing && isAuthenticated) {
+      router.replace("/home");
+    }
+  }, [initializing, isAuthenticated, router]);
+
+  const handlePhoneChange = (value) => {
+    setPhoneNumber(value);
+    if (error) {
+      setError("");
+    }
+  };
+
+  const handleEmailChange = (value) => {
+    setEmail(value);
+    if (error) {
+      setError("");
+    }
+  };
+
+  const handlePasswordChange = (value) => {
+    setPassword(value);
+    if (error) {
+      setError("");
+    }
+  };
+
+  const handleConfirmPasswordChange = (value) => {
+    setConfirmPassword(value);
+    if (error) {
+      setError("");
+    }
+  };
+
+  const handleSignup = async () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+    const trimmedConfirm = confirmPassword.trim();
+
+    if (!trimmedEmail) {
+      setError("Email is required.");
+      return;
+    }
+
+    if (!trimmedPassword) {
+      setError("Password is required.");
+      return;
+    }
+
+    if (trimmedPassword !== trimmedConfirm) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await signup({
+        email: trimmedEmail,
+        password: trimmedPassword,
+        phoneNumber,
+      });
+      router.replace("/home");
+    } catch (signupError) {
+      const message =
+        signupError instanceof Error
+          ? signupError.message
+          : "Failed to create account.";
+      setError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -47,7 +129,7 @@ export default function Signup() {
               placeholderTextColor="#9B9B9B"
               keyboardType="phone-pad"
               value={phoneNumber}
-              onChangeText={setPhoneNumber}
+              onChangeText={handlePhoneChange}
             />
           </View>
 
@@ -63,7 +145,7 @@ export default function Signup() {
               keyboardType="email-address"
               autoCapitalize="none"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={handleEmailChange}
             />
           </View>
 
@@ -78,7 +160,7 @@ export default function Signup() {
               placeholderTextColor="#9B9B9B"
               secureTextEntry={!showPassword}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={handlePasswordChange}
             />
             <TouchableOpacity
               onPress={() => setShowPassword((prev) => !prev)}
@@ -103,7 +185,7 @@ export default function Signup() {
               placeholderTextColor="#9B9B9B"
               secureTextEntry={!showConfirmPassword}
               value={confirmPassword}
-              onChangeText={setConfirmPassword}
+              onChangeText={handleConfirmPasswordChange}
             />
             <TouchableOpacity
               onPress={() => setShowConfirmPassword((prev) => !prev)}
@@ -119,9 +201,16 @@ export default function Signup() {
 
           <TouchableOpacity
             style={[styles.primaryButton, styles.signupButton]}
+            onPress={handleSignup}
+            activeOpacity={0.85}
+            disabled={isSubmitting}
           >
-            <Text style={styles.primaryButtonText}>Sign Up</Text>
+            <Text style={styles.primaryButtonText}>
+              {isSubmitting ? "Creating account..." : "Sign Up"}
+            </Text>
           </TouchableOpacity>
+
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
           <View style={styles.bottomPrompt}>
             <Text style={styles.promptText}>Already have an account? </Text>
@@ -223,6 +312,13 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  errorText: {
+    marginTop: 12,
+    textAlign: "center",
+    color: "#C03221",
+    fontSize: 13,
+    fontWeight: "500",
   },
   bottomPrompt: {
     flexDirection: "row",

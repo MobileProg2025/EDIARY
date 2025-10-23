@@ -1,5 +1,7 @@
-import { Tabs } from "expo-router";
+import { useEffect } from "react";
+import { Tabs, useRouter } from "expo-router";
 import {
+  ActivityIndicator,
   View,
   Text,
   TouchableOpacity,
@@ -8,6 +10,7 @@ import {
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { DiaryProvider } from "../../context/diary-context";
+import { useAuth } from "../../context/auth-context";
 
 const ACTIVE_COLOR = "#FFA36C";
 const INACTIVE_COLOR = "#7E7874";
@@ -171,6 +174,27 @@ const iconFor = (name) => ({ focused, color, size }) => (
 );
 
 export default function TabsLayout() {
+  const router = useRouter();
+  const { isAuthenticated, initializing } = useAuth();
+
+  useEffect(() => {
+    if (!initializing && !isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [initializing, isAuthenticated, router]);
+
+  if (initializing) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={ACTIVE_COLOR} />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <DiaryProvider>
       <Tabs
@@ -220,6 +244,12 @@ export default function TabsLayout() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F8F4F1",
+  },
   tabBarWrapper: {
     backgroundColor: "#FFFFFF",
     position: "relative",
