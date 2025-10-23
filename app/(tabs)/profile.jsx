@@ -1,14 +1,99 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useMemo } from "react";
+import { useDiary } from "../../context/diary-context";
+
+const STAT_META = [
+  { label: "Total Entries", color: "#E9E2D7", key: "totalEntries" },
+  { label: "Current Streak", color: "#E6D4BD", key: "currentStreak" },
+  { label: "Longest Streak", color: "#DCCFC4", key: "longestStreak" },
+  { label: "Total Words", color: "#E8CFC5", key: "totalWords" },
+];
+
+const normalizeDate = (date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+const countWords = (text) =>
+  text
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
 
 export default function ProfileScreen() {
   const { width } = useWindowDimensions();
-  const stats = [
-    { label: "Total Entries", color: "#E9E2D7" },
-    { label: "Current Streak", color: "#E6D4BD" },
-    { label: "Longest Streak", color: "#DCCFC4" },
-    { label: "Total Words", color: "#E8CFC5" },
-  ];
+  const { entries } = useDiary();
+
+  const stats = useMemo(() => {
+    if (!entries.length) {
+      return {
+        totalEntries: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        totalWords: 0,
+      };
+    }
+
+    const sortedDates = [...entries]
+      .map((entry) => normalizeDate(new Date(entry.createdAt)))
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    const uniqueDates = sortedDates.reduce((acc, date) => {
+      const key = date.getTime();
+      if (!acc.length || acc[acc.length - 1].getTime() !== key) {
+        acc.push(date);
+      }
+      return acc;
+    }, []);
+
+    let longestStreak = 1;
+    let currentStreak = 1;
+
+    let streak = 1;
+    for (let i = 1; i < uniqueDates.length; i += 1) {
+      const prev = uniqueDates[i - 1];
+      const current = uniqueDates[i];
+      const diffInDays =
+        (current.getTime() - prev.getTime()) / (24 * 60 * 60 * 1000);
+
+      if (diffInDays === 1) {
+        streak += 1;
+      } else if (diffInDays === 0) {
+        continue;
+      } else {
+        streak = 1;
+      }
+
+      longestStreak = Math.max(longestStreak, streak);
+    }
+
+    const today = normalizeDate(new Date());
+    const lastDate = uniqueDates[uniqueDates.length - 1];
+    if (uniqueDates.length === 1) {
+      currentStreak = 1;
+    } else if (today.getTime() === lastDate.getTime()) {
+      currentStreak = streak;
+    } else if (
+      (today.getTime() - lastDate.getTime()) / (24 * 60 * 60 * 1000) === 1
+    ) {
+      currentStreak = streak;
+    } else {
+      currentStreak = 0;
+    }
+
+    const totalWords = entries.reduce(
+      (sum, entry) =>
+        sum + countWords(entry.title ?? "") + countWords(entry.content ?? ""),
+      0,
+    );
+
+    return {
+      totalEntries: entries.length,
+      currentStreak,
+      longestStreak,
+      totalWords,
+    };
+  }, [entries]);
+
   const HORIZONTAL_PADDING = 32;
   const CARD_GAP = 18;
   const CARDS_PER_ROW = 2;
@@ -16,10 +101,13 @@ export default function ProfileScreen() {
   const cardSize =
     (effectiveWidth - HORIZONTAL_PADDING * 2 - CARD_GAP * (CARDS_PER_ROW - 1)) /
     CARDS_PER_ROW;
-  const statRows = [
-    stats.slice(0, 2),
-    stats.slice(2, 4),
-  ];
+  const statRows = useMemo(() => {
+    const values = STAT_META.map((meta) => ({
+      ...meta,
+      value: stats[meta.key],
+    }));
+    return [values.slice(0, 2), values.slice(2, 4)];
+  }, [stats]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -61,6 +149,7 @@ export default function ProfileScreen() {
                   ]}
                 >
                   <Text style={styles.statLabel}>{item.label}</Text>
+                  <Text style={styles.statValue}>{item.value ?? 0}</Text>
                 </View>
               ))}
             </View>
@@ -130,5 +219,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#3C3148",
     fontWeight: "600",
+  },
+  statValue: {
+    marginTop: 6,
+    fontSize: 22,
+    color: "#3C3148",
+    fontWeight: "700",
   },
 });

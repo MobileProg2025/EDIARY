@@ -70,6 +70,7 @@ const normalizeUpdates = (updates) => {
 
 export function DiaryProvider({ children }) {
   const [entries, setEntries] = useState(INITIAL_ENTRIES);
+  const [trashEntries, setTrashEntries] = useState([]);
 
   const addEntry = useCallback((partialEntry) => {
     setEntries((prev) => {
@@ -86,7 +87,42 @@ export function DiaryProvider({ children }) {
   }, []);
 
   const deleteEntry = useCallback((id) => {
-    setEntries((prev) => prev.filter((entry) => entry.id !== id));
+    setEntries((prev) => {
+      const target = prev.find((entry) => entry.id === id);
+      if (!target) {
+        return prev;
+      }
+
+      setTrashEntries((trashPrev) => [
+        { ...target, trashedAt: new Date().toISOString() },
+        ...trashPrev,
+      ]);
+
+      return prev.filter((entry) => entry.id !== id);
+    });
+  }, []);
+
+  const recoverEntry = useCallback((id) => {
+    setTrashEntries((prev) => {
+      const target = prev.find((entry) => entry.id === id);
+      if (!target) {
+        return prev;
+      }
+
+      const { trashedAt, ...rest } = target;
+
+      setEntries((entriesPrev) => [rest, ...entriesPrev]);
+
+      return prev.filter((entry) => entry.id !== id);
+    });
+  }, []);
+
+  const deleteFromTrash = useCallback((id) => {
+    setTrashEntries((prev) => prev.filter((entry) => entry.id !== id));
+  }, []);
+
+  const emptyTrash = useCallback(() => {
+    setTrashEntries([]);
   }, []);
 
   const value = useMemo(
@@ -95,9 +131,22 @@ export function DiaryProvider({ children }) {
       addEntry,
       updateEntry,
       deleteEntry,
+      recoverEntry,
+      deleteFromTrash,
+      emptyTrash,
+      trashEntries,
       getEntry: (id) => entries.find((entry) => entry.id === id) ?? null,
     }),
-    [entries, addEntry, updateEntry, deleteEntry],
+    [
+      entries,
+      addEntry,
+      updateEntry,
+      deleteEntry,
+      recoverEntry,
+      deleteFromTrash,
+      emptyTrash,
+      trashEntries,
+    ],
   );
 
   return <DiaryContext.Provider value={value}>{children}</DiaryContext.Provider>;

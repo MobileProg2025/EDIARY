@@ -109,6 +109,7 @@ export default function SettingsScreen() {
             <Text style={styles.sectionLabel}>Others</Text>
             <TouchableOpacity
               activeOpacity={0.8}
+              onPress={() => router.push("/settings/trash")}
               style={[styles.row, styles.choiceRow]}
             >
               <Ionicons name="trash" size={18} color="#FFA36C" />
@@ -225,5 +226,4 @@ const styles = StyleSheet.create({
     backgroundColor: "#3C3148",
   },
 });
-
 
