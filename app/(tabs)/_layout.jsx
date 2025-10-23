@@ -7,6 +7,7 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { DiaryProvider } from "../../context/diary-context";
 
 const ACTIVE_COLOR = "#FFA36C";
 const INACTIVE_COLOR = "#7E7874";
@@ -171,48 +172,50 @@ const iconFor = (name) => ({ focused, color, size }) => (
 
 export default function TabsLayout() {
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-      }}
-      tabBar={(props) => <CustomTabBar {...props} />}
-    >
-      <Tabs.Screen
-        name="home"
-        options={{
-          tabBarLabel: TAB_META.home.label,
-          tabBarIcon: iconFor(TAB_META.home.icon),
+    <DiaryProvider>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
         }}
-      />
-      <Tabs.Screen
-        name="diary"
-        options={{
-          tabBarLabel: TAB_META.diary.label,
-          tabBarIcon: iconFor(TAB_META.diary.icon),
-        }}
-      />
-      <Tabs.Screen
-        name="post"
-        options={{
-          tabBarLabel: "Post",
-          tabBarIcon: iconFor("add"),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          tabBarLabel: TAB_META.profile.label,
-          tabBarIcon: iconFor(TAB_META.profile.icon),
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          tabBarLabel: TAB_META.settings.label,
-          tabBarIcon: iconFor(TAB_META.settings.icon),
-        }}
-      />
-    </Tabs>
+        tabBar={(props) => <CustomTabBar {...props} />}
+      >
+        <Tabs.Screen
+          name="home"
+          options={{
+            tabBarLabel: TAB_META.home.label,
+            tabBarIcon: iconFor(TAB_META.home.icon),
+          }}
+        />
+        <Tabs.Screen
+          name="diary"
+          options={{
+            tabBarLabel: TAB_META.diary.label,
+            tabBarIcon: iconFor(TAB_META.diary.icon),
+          }}
+        />
+        <Tabs.Screen
+          name="post"
+          options={{
+            tabBarLabel: "Post",
+            tabBarIcon: iconFor("add"),
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            tabBarLabel: TAB_META.profile.label,
+            tabBarIcon: iconFor(TAB_META.profile.icon),
+          }}
+        />
+        <Tabs.Screen
+          name="settings"
+          options={{
+            tabBarLabel: TAB_META.settings.label,
+            tabBarIcon: iconFor(TAB_META.settings.icon),
+          }}
+        />
+      </Tabs>
+    </DiaryProvider>
   );
 }
 

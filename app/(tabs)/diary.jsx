@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   FlatList,
   Image,
@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useDiary } from "../../context/diary-context";
 
 const SEARCH_PLACEHOLDER = "Search memories";
 const LIST_BG = "#FEFEFC";
@@ -19,43 +21,86 @@ const MOOD_META = {
   happy: { label: "Happy", color: "#68C290", icon: "emoticon-happy-outline" },
   sad: { label: "Sad", color: "#79A7F3", icon: "emoticon-sad-outline" },
   angry: { label: "Angry", color: "#F37A74", icon: "emoticon-angry-outline" },
+  calm: { label: "Calm", color: "#9BD6D0", icon: "emoticon-neutral-outline" },
   love: { label: "In Love", color: "#E39BCB", icon: "heart-outline" },
-  excited: {
-    label: "Excited",
-    color: "#F3C95C",
-    icon: "emoticon-excited-outline",
-  },
 };
 
-const SAMPLE_ENTRIES = [];
+const FALLBACK_META = {
+  label: "Memory",
+  color: "#FFA36C",
+  icon: "emoticon-outline",
+};
+
+const formatTimestamp = (value) => {
+  const date = value ? new Date(value) : new Date();
+  return new Intl.DateTimeFormat("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
+};
 
 export default function DiaryScreen() {
+  const router = useRouter();
+  const { entries, deleteEntry } = useDiary();
   const [query, setQuery] = useState("");
-  const filteredEntries = [];
+
+  const filteredEntries = useMemo(() => {
+    const trimmed = query.trim().toLowerCase();
+    if (!trimmed) {
+      return entries;
+    }
+
+    return entries.filter((entry) => {
+      const haystack = `${entry.title} ${entry.content}`.toLowerCase();
+      return haystack.includes(trimmed);
+    });
+  }, [entries, query]);
+
+  const handleEdit = (entry) => {
+    router.push({ pathname: "/post", params: { entryId: entry.id } });
+  };
+
+  const handleDelete = (entry) => {
+    deleteEntry(entry.id);
+  };
 
   const renderEntry = ({ item }) => {
-    const meta = MOOD_META[item.moodIcon];
+    const meta = MOOD_META[item.mood] ?? FALLBACK_META;
 
     return (
       <View style={styles.entryCard}>
-        <View style={styles.entryIconWrapper}>
-          <MaterialCommunityIcons
-            name={meta.icon}
-            size={20}
-            color={meta.color}
-          />
-        </View>
+        <MaterialCommunityIcons
+          name={meta.icon}
+          size={28}
+          color="#161616"
+          style={styles.entryMoodIcon}
+        />
         <View style={styles.entryContent}>
           <View style={[styles.entryTag, { backgroundColor: meta.color }]}>
-            <Text style={styles.entryTagText}>{item.timestamp}</Text>
+            <Text style={styles.entryTagText}>{formatTimestamp(item.createdAt)}</Text>
           </View>
           <Text style={styles.entryTitle}>{item.title}</Text>
+          {item.content ? (
+            <Text style={styles.entryExcerpt} numberOfLines={1}>
+              {item.content}
+            </Text>
+          ) : null}
         </View>
         <View style={styles.entryActions}>
-          <TouchableOpacity style={styles.entryActionButton}>
+          <TouchableOpacity
+            style={styles.entryActionButton}
+            onPress={() => handleEdit(item)}
+          >
             <Ionicons name="create-outline" size={18} color="#3C3148" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.entryActionButton}>
+          <TouchableOpacity
+            style={styles.entryActionButton}
+            onPress={() => handleDelete(item)}
+          >
             <Ionicons name="trash-outline" size={18} color="#F37A74" />
           </TouchableOpacity>
         </View>
@@ -185,13 +230,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     gap: 12,
   },
-  entryIconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(60, 49, 72, 0.08)",
-    alignItems: "center",
-    justifyContent: "center",
+  entryMoodIcon: {
+    marginRight: 8,
   },
   entryContent: {
     flex: 1,
@@ -212,6 +252,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#3C3148",
     fontWeight: "600",
+  },
+  entryExcerpt: {
+    fontSize: 13,
+    color: "#7E7874",
   },
   entryActions: {
     flexDirection: "row",

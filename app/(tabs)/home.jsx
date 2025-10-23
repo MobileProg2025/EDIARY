@@ -8,10 +8,13 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useDiary } from "../../context/diary-context";
 
 const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const DAY_SIZE = 40;
+const SELECTED_COLOR = "#C99977";
+const DOT_COLOR = "#161616";
 
 const today = new Date();
 const normalisedToday = new Date(
@@ -39,11 +42,88 @@ const isSameDay = (a, b) =>
   a.getMonth() === b.getMonth() &&
   a.getDate() === b.getDate();
 
+const dateKey = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+    date.getDate(),
+  ).padStart(2, "0")}`;
+
+const MOOD_META = {
+  happy: { label: "Happy", color: "#68C290", icon: "emoticon-happy-outline" },
+  sad: { label: "Sad", color: "#79A7F3", icon: "emoticon-sad-outline" },
+  angry: { label: "Angry", color: "#F37A74", icon: "emoticon-angry-outline" },
+  calm: { label: "Calm", color: "#9BD6D0", icon: "emoticon-neutral-outline" },
+  love: { label: "In Love", color: "#E39BCB", icon: "heart-outline" },
+};
+
+const FALLBACK_META = {
+  label: "Memory",
+  color: "#FFA36C",
+  icon: "emoticon-outline",
+};
+
+const formatEntryTimestamp = (value) => {
+  const date = value ? new Date(value) : new Date();
+  return new Intl.DateTimeFormat("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
+};
+
 export default function HomeScreen() {
+  const { entries } = useDiary();
   const [visibleMonth, setVisibleMonth] = useState(
     () => new Date(normalisedToday.getFullYear(), normalisedToday.getMonth(), 1),
   );
   const [selectedDate, setSelectedDate] = useState(normalisedToday);
+  const [showAllRecent, setShowAllRecent] = useState(false);
+  const [showAllOnThisDay, setShowAllOnThisDay] = useState(false);
+
+  const entriesByDate = useMemo(() => {
+    return entries.reduce((acc, entry) => {
+      const created = new Date(entry.createdAt);
+      const key = dateKey(created);
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(entry);
+      return acc;
+    }, {});
+  }, [entries]);
+
+  const sortedEntries = useMemo(
+    () =>
+      [...entries].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      ),
+    [entries],
+  );
+
+  const recentEntriesLimited = useMemo(
+    () => sortedEntries.slice(0, 1),
+    [sortedEntries],
+  );
+
+  const selectedEntries = useMemo(() => {
+    const key = dateKey(selectedDate);
+    return entriesByDate[key] ?? [];
+  }, [entriesByDate, selectedDate]);
+
+  const selectedEntriesLimited = useMemo(
+    () => selectedEntries.slice(0, 1),
+    [selectedEntries],
+  );
+
+  const recentEntriesDisplay = showAllRecent
+    ? sortedEntries
+    : recentEntriesLimited;
+
+  const onThisDayEntriesDisplay = showAllOnThisDay
+    ? selectedEntries
+    : selectedEntriesLimited;
 
   const monthLabel = useMemo(
     () => formatMonthYear(visibleMonth),
@@ -70,14 +150,16 @@ export default function HomeScreen() {
         cellDate.getDate(),
       );
 
+      const key = dateKey(normalisedCell);
       return {
         date: normalisedCell,
         isCurrentMonth: cellDate.getMonth() === visibleMonth.getMonth(),
         isToday: isSameDay(normalisedCell, normalisedToday),
         isSelected: !!selectedDate && isSameDay(normalisedCell, selectedDate),
+        hasEntries: (entriesByDate[key] ?? []).length > 0,
       };
     });
-  }, [selectedDate, visibleMonth]);
+  }, [entriesByDate, selectedDate, visibleMonth]);
 
   const calendarWeeks = useMemo(() => {
     return Array.from({ length: 6 }, (_, weekIndex) =>
@@ -94,9 +176,32 @@ export default function HomeScreen() {
   const handleSelectDate = (date, isCurrentMonth) => {
     setSelectedDate(date);
 
-    if (!isCurrentMonth) {
-      setVisibleMonth(new Date(date.getFullYear(), date.getMonth(), 1));
-    }
+  if (!isCurrentMonth) {
+    setVisibleMonth(new Date(date.getFullYear(), date.getMonth(), 1));
+  }
+};
+
+  const renderEntrySnippet = (entry) => {
+    const meta = MOOD_META[entry.mood] ?? FALLBACK_META;
+    return (
+      <View key={entry.id} style={styles.entrySnippet}>
+        <View style={styles.snippetHeader}>
+          <MaterialCommunityIcons
+            name={meta.icon}
+            size={20}
+            color="#3C3148"
+            style={styles.snippetIcon}
+          />
+          <View style={[styles.snippetTag, { backgroundColor: meta.color }]}>
+            <Ionicons name="calendar-outline" size={12} color="#FFFFFF" />
+            <Text style={styles.snippetTagText}>
+              {formatEntryTimestamp(entry.createdAt)}
+            </Text>
+          </View>
+        </View>
+        <Text style={styles.snippetTitle}>{entry.title}</Text>
+      </View>
+    );
   };
 
   return (
@@ -162,6 +267,7 @@ export default function HomeScreen() {
                     styles.dateCell,
                     day.isSelected && styles.dateCellSelected,
                     day.isToday && !day.isSelected && styles.dateCellToday,
+                    !day.isCurrentMonth && styles.dateCellMuted,
                   ];
 
                   return (
@@ -174,6 +280,7 @@ export default function HomeScreen() {
                       accessibilityLabel={formatLongDate(day.date)}
                     >
                       <Text style={textStyles}>{day.date.getDate()}</Text>
+                      {day.hasEntries ? <View style={styles.dateDot} /> : null}
                     </TouchableOpacity>
                   );
                 })}
@@ -183,18 +290,50 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recently added</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recently added</Text>
+            {sortedEntries.length > recentEntriesLimited.length ? (
+              <TouchableOpacity
+                onPress={() => setShowAllRecent((prev) => !prev)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={styles.sectionAction}>
+                  {showAllRecent ? "View less" : "View all"}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
           <View style={styles.card}>
-            <Text style={styles.cardPlaceholder}>No recent yet</Text>
+            {recentEntriesDisplay.length ? (
+              recentEntriesDisplay.map((entry) => renderEntrySnippet(entry))
+            ) : (
+              <Text style={styles.cardPlaceholder}>No recent yet</Text>
+            )}
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>On this day</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>On this day</Text>
+            {selectedEntries.length > selectedEntriesLimited.length ? (
+              <TouchableOpacity
+                onPress={() => setShowAllOnThisDay((prev) => !prev)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={styles.sectionAction}>
+                  {showAllOnThisDay ? "View less" : "View all"}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
           <View style={styles.card}>
-            <Text style={styles.cardPlaceholder}>
-              {selectedDate ? formatLongDate(selectedDate) : "No selected date"}
-            </Text>
+            {onThisDayEntriesDisplay.length ? (
+              onThisDayEntriesDisplay.map((entry) => renderEntrySnippet(entry))
+            ) : (
+              <Text style={styles.cardPlaceholder}>
+                {selectedDate ? formatLongDate(selectedDate) : "No selected date"}
+              </Text>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -293,13 +432,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: DAY_SIZE / 2,
+    gap: 4,
   },
   dateCellSelected: {
-    backgroundColor: "#FFA36C",
+    backgroundColor: SELECTED_COLOR,
   },
   dateCellToday: {
     borderWidth: 1,
-    borderColor: "#FFA36C",
+    borderColor: SELECTED_COLOR,
+  },
+  dateCellMuted: {
+    opacity: 0.35,
   },
   dateLabel: {
     fontSize: 14,
@@ -313,12 +456,28 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "700",
   },
+  dateDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: DOT_COLOR,
+  },
   section: {
     gap: 12,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   sectionTitle: {
     fontSize: 16,
     color: "#3C3148",
+    fontWeight: "600",
+  },
+  sectionAction: {
+    fontSize: 13,
+    color: "#6DBFB8",
     fontWeight: "600",
   },
   card: {
@@ -328,6 +487,7 @@ const styles = StyleSheet.create({
     borderColor: "#E6DAD1",
     paddingVertical: 18,
     paddingHorizontal: 16,
+    gap: 18,
   },
   cardPlaceholder: {
     fontSize: 14,
@@ -335,7 +495,33 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "500",
   },
-  icon: {
-    marginTop: 6,
+  entrySnippet: {
+    gap: 8,
+  },
+  snippetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  snippetIcon: {
+    marginRight: 2,
+  },
+  snippetTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  snippetTagText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  snippetTitle: {
+    fontSize: 15,
+    color: "#3C3148",
+    fontWeight: "600",
   },
 });

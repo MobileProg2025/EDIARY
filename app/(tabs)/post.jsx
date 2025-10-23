@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Image,
   ScrollView,
@@ -10,6 +10,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
+import { useDiary } from "../../context/diary-context";
 
 const BG_COLOR = "#F8F4F1";
 const CARD_COLOR = "#FEFEFC";
@@ -34,15 +37,84 @@ const MOODS = {
 };
 
 export default function PostScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const entryIdParam = params.entryId;
+  const entryId = Array.isArray(entryIdParam)
+    ? entryIdParam[0]
+    : entryIdParam ?? undefined;
+  const { entries, addEntry, updateEntry } = useDiary();
+  const existingEntry = useMemo(
+    () => (entryId ? entries.find((item) => item.id === entryId) ?? null : null),
+    [entries, entryId],
+  );
+
   const [selectedMood, setSelectedMood] = useState("sad");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [imageUri, setImageUri] = useState(null);
 
-  const moodEntries = useMemo(
-    () => Object.entries(MOODS),
-    [],
+  const resetForm = useCallback(() => {
+    setSelectedMood("sad");
+    setTitle("");
+    setContent("");
+    setImageUri(null);
+  }, []);
+
+  useEffect(() => {
+    if (entryId && existingEntry) {
+      setSelectedMood(existingEntry.mood ?? "sad");
+      setTitle(existingEntry.title ?? "");
+      setContent(existingEntry.content ?? "");
+      setImageUri(existingEntry.imageUri ?? null);
+    }
+  }, [entryId, existingEntry]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!entryId) {
+        resetForm();
+      }
+    }, [entryId, resetForm]),
   );
+
+  const moodEntries = useMemo(() => Object.entries(MOODS), []);
+
+  const handleToggleImage = () => {
+    setImageUri((prev) => (prev ? null : null));
+  };
+
+  const handleSave = () => {
+    const trimmedTitle = title.trim();
+    const trimmedContent = content.trim();
+
+    if (!trimmedTitle && !trimmedContent) {
+      return;
+    }
+
+    if (entryId && existingEntry) {
+      updateEntry(entryId, {
+        mood: selectedMood,
+        title: trimmedTitle || "Untitled memory",
+        content: trimmedContent,
+        imageUri,
+      });
+    } else {
+      addEntry({
+        mood: selectedMood,
+        title: trimmedTitle || "Untitled memory",
+        content: trimmedContent,
+        imageUri,
+      });
+    }
+
+    resetForm();
+    router.setParams({ entryId: undefined });
+    router.replace("/diary");
+  };
+
+  const screenTitle = entryId ? "Edit memory" : "Add memories";
+  const buttonLabel = entryId ? "Update" : "Save";
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -51,7 +123,7 @@ export default function PostScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>Add memories</Text>
+        <Text style={styles.title}>{screenTitle}</Text>
 
         <View style={styles.moodCard}>
           <Text style={styles.moodLabel}>Mood</Text>
@@ -106,7 +178,7 @@ export default function PostScreen() {
 
         <TouchableOpacity
           style={styles.imageCard}
-          onPress={() => setImageUri(imageUri ? null : null)}
+          onPress={handleToggleImage}
           activeOpacity={0.85}
         >
           {imageUri ? (
@@ -119,8 +191,8 @@ export default function PostScreen() {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.saveButton}>
-          <Text style={styles.saveButtonText}>Save</Text>
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+          <Text style={styles.saveButtonText}>{buttonLabel}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
