@@ -13,13 +13,6 @@ import { Ionicons } from "@expo/vector-icons";
 const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const DAY_SIZE = 40;
 
-type CalendarDay = {
-  date: Date;
-  isCurrentMonth: boolean;
-  isToday: boolean;
-  isSelected: boolean;
-};
-
 const today = new Date();
 const normalisedToday = new Date(
   today.getFullYear(),
@@ -27,13 +20,13 @@ const normalisedToday = new Date(
   today.getDate(),
 );
 
-const formatMonthYear = (date: Date) =>
+const formatMonthYear = (date) =>
   new Intl.DateTimeFormat("en-US", {
     month: "long",
     year: "numeric",
   }).format(date);
 
-const formatLongDate = (date: Date) =>
+const formatLongDate = (date) =>
   new Intl.DateTimeFormat("en-US", {
     weekday: "long",
     month: "long",
@@ -41,7 +34,7 @@ const formatLongDate = (date: Date) =>
     year: "numeric",
   }).format(date);
 
-const isSameDay = (a: Date, b: Date) =>
+const isSameDay = (a, b) =>
   a.getFullYear() === b.getFullYear() &&
   a.getMonth() === b.getMonth() &&
   a.getDate() === b.getDate();
@@ -50,16 +43,14 @@ export default function HomeScreen() {
   const [visibleMonth, setVisibleMonth] = useState(
     () => new Date(normalisedToday.getFullYear(), normalisedToday.getMonth(), 1),
   );
-  const [selectedDate, setSelectedDate] = useState<Date | null>(
-    normalisedToday,
-  );
+  const [selectedDate, setSelectedDate] = useState(normalisedToday);
 
   const monthLabel = useMemo(
     () => formatMonthYear(visibleMonth),
     [visibleMonth],
   );
 
-  const calendarDays = useMemo<CalendarDay[]>(() => {
+  const calendarDays = useMemo(() => {
     const startOfMonth = new Date(
       visibleMonth.getFullYear(),
       visibleMonth.getMonth(),
@@ -94,13 +85,13 @@ export default function HomeScreen() {
     );
   }, [calendarDays]);
 
-  const handleChangeMonth = (direction: 1 | -1) => {
+  const handleChangeMonth = (direction) => {
     setVisibleMonth(
       (prev) => new Date(prev.getFullYear(), prev.getMonth() + direction, 1),
     );
   };
 
-  const handleSelectDate = (date: Date, isCurrentMonth: boolean) => {
+  const handleSelectDate = (date, isCurrentMonth) => {
     setSelectedDate(date);
 
     if (!isCurrentMonth) {

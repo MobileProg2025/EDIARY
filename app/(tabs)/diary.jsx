@@ -11,13 +11,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
-type DiaryEntry = {
-  id: string;
-  moodIcon: keyof typeof MOOD_META;
-  title: string;
-  timestamp: string;
-};
-
 const SEARCH_PLACEHOLDER = "Search memories";
 const LIST_BG = "#FEFEFC";
 const BORDER_COLOR = "#E6DAD1";
@@ -32,15 +25,15 @@ const MOOD_META = {
     color: "#F3C95C",
     icon: "emoticon-excited-outline",
   },
-} as const;
+};
 
-const SAMPLE_ENTRIES: DiaryEntry[] = [];
+const SAMPLE_ENTRIES = [];
 
 export default function DiaryScreen() {
   const [query, setQuery] = useState("");
-  const filteredEntries: DiaryEntry[] = [];
+  const filteredEntries = [];
 
-  const renderEntry = ({ item }: { item: DiaryEntry }) => {
+  const renderEntry = ({ item }) => {
     const meta = MOOD_META[item.moodIcon];
 
     return (

@@ -11,19 +11,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
-type MoodKey = "sad" | "angry" | "calm" | "happy" | "love";
-
 const BG_COLOR = "#F8F4F1";
 const CARD_COLOR = "#FEFEFC";
 const BORDER_COLOR = "#E6DAD1";
 const SAVE_COLOR = "#2F2621";
 const BORDER_BLACK = "#161616";
-
-type MoodOption = {
-  label: string;
-  background: string;
-  icon: keyof typeof MOOD_ICONS;
-};
 
 const MOOD_ICONS = {
   sad: "emoticon-sad-outline",
@@ -31,9 +23,9 @@ const MOOD_ICONS = {
   calm: "emoticon-neutral-outline",
   happy: "emoticon-happy-outline",
   love: "heart-outline",
-} as const;
+};
 
-const MOODS: Record<MoodKey, MoodOption> = {
+const MOODS = {
   sad: { label: "Sad", background: "#79A7F3", icon: "sad" },
   angry: { label: "Angry", background: "#F37A74", icon: "angry" },
   calm: { label: "Calm", background: "#68C290", icon: "calm" },
@@ -42,13 +34,13 @@ const MOODS: Record<MoodKey, MoodOption> = {
 };
 
 export default function PostScreen() {
-  const [selectedMood, setSelectedMood] = useState<MoodKey>("sad");
+  const [selectedMood, setSelectedMood] = useState("sad");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [imageUri, setImageUri] = useState<string | null>(null);
+  const [imageUri, setImageUri] = useState(null);
 
   const moodEntries = useMemo(
-    () => Object.entries(MOODS) as Array<[MoodKey, MoodOption]>,
+    () => Object.entries(MOODS),
     [],
   );
 

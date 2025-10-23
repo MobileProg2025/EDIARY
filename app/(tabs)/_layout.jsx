@@ -1,6 +1,4 @@
-import type { ComponentProps } from "react";
 import { Tabs } from "expo-router";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import {
   View,
   Text,
@@ -13,14 +11,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 const ACTIVE_COLOR = "#FFA36C";
 const INACTIVE_COLOR = "#7E7874";
 
-type IoniconName = ComponentProps<typeof Ionicons>["name"];
-
-type TabMeta = {
-  label: string;
-  icon: IoniconName;
-};
-
-const TAB_META: Record<string, TabMeta> = {
+const TAB_META = {
   home: { label: "Home", icon: "home" },
   diary: { label: "Diary", icon: "book" },
   profile: { label: "Profile", icon: "person" },
@@ -35,19 +26,14 @@ const LABEL_LINE_HEIGHT = 14;
 const NAV_HEIGHT =
   NAV_VERTICAL_PADDING * 2 + ICON_SIZE + LABEL_TOP_MARGIN + LABEL_LINE_HEIGHT;
 const POST_BUTTON_BOTTOM_OFFSET = NAV_HEIGHT - POST_BUTTON_SIZE / 2;
-function CustomTabBar({
-  state,
-  descriptors,
-  navigation,
-  insets,
-}: BottomTabBarProps) {
+function CustomTabBar({ state, descriptors, navigation, insets }) {
   const bottomInset = Math.max(insets.bottom, 8);
   const postIndex = state.routes.findIndex((route) => route.name === "post");
   const nonPostRoutes = state.routes.filter((route) => route.name !== "post");
   const leftRoutes = nonPostRoutes.slice(0, 2);
   const rightRoutes = nonPostRoutes.slice(2);
 
-  const handlePress = (routeName: string, index: number) => {
+  const handlePress = (routeName, index) => {
     const event = navigation.emit({
       type: "tabPress",
       target: state.routes[index].key,
@@ -59,19 +45,18 @@ function CustomTabBar({
     }
   };
 
-  const handleLongPress = (routeName: string, index: number) => {
+  const handleLongPress = (routeName, index) => {
     navigation.emit({
       type: "tabLongPress",
       target: state.routes[index].key,
     });
   };
 
-  const renderRouteButton = (route: typeof state.routes[number]) => {
+  const renderRouteButton = (route) => {
     const routeIndex = state.routes.findIndex((item) => item.key === route.key);
     const isFocused = state.index === routeIndex;
     const { options } = descriptors[route.key];
-    const { tabBarTestID } =
-      options as typeof options & { tabBarTestID?: string };
+    const { tabBarTestID } = options;
     const meta = TAB_META[route.name];
     const label =
       options.tabBarLabel ??
@@ -180,15 +165,9 @@ function CustomTabBar({
   );
 }
 
-const iconFor = (name: IoniconName) => ({
-  focused,
-  color,
-  size,
-}: {
-  focused: boolean;
-  color: string;
-  size: number;
-}) => <Ionicons name={name} size={size} color={color} />;
+const iconFor = (name) => ({ focused, color, size }) => (
+  <Ionicons name={name} size={size} color={color} />
+);
 
 export default function TabsLayout() {
   return (

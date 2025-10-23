@@ -19,14 +19,14 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
-  const handleEmailChange = (value: string) => {
+  const handleEmailChange = (value) => {
     setEmail(value);
     if (error) {
       setError("");
     }
   };
 
-  const handlePasswordChange = (value: string) => {
+  const handlePasswordChange = (value) => {
     setPassword(value);
     if (error) {
       setError("");
