@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
   },
   sectionAction: {
     fontSize: 13,
-    color: "#6DBFB8",
+    color: "#161616",
     fontWeight: "600",
   },
   card: {
