@@ -9,10 +9,12 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [selectedTheme, setSelectedTheme] = useState("light");
+  const router = useRouter();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -25,10 +27,14 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <View style={styles.card}>
             <Text style={styles.sectionLabel}>Account</Text>
-            <View style={styles.row}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => router.push("/settings/personal-details")}
+              style={[styles.row, styles.choiceRow]}
+            >
               <Ionicons name="person" size={20} color="#FFA36C" />
               <Text style={styles.cardPrimary}>Personal Details</Text>
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -185,7 +191,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   leadingIcon: {
-    marginTop: -20,
+    alignSelf: "flex-start",
+    marginTop: 2,
   },
   textGroup: {
     flex: 1,
@@ -218,7 +225,5 @@ const styles = StyleSheet.create({
     backgroundColor: "#3C3148",
   },
 });
-
-
 
 
