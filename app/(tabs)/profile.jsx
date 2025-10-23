@@ -1,5 +1,5 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Image, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useMemo } from "react";
 import { useDiary } from "../../context/diary-context";
 
@@ -117,12 +117,10 @@ export default function ProfileScreen() {
       >
         <Text style={styles.title}>Profile</Text>
 
-        <Image
-          source={{
-            uri: "https://i.imgur.com/wkMsdGc.jpg",
-          }}
-          style={styles.avatar}
-        />
+        <View style={styles.avatar}>
+          <View style={styles.avatarHead} />
+          <View style={styles.avatarBody} />
+        </View>
 
         <Text style={styles.name}>Ken Louie Neri</Text>
         <Text style={styles.email}>nerikenlouie@gmail.com</Text>
@@ -184,6 +182,24 @@ const styles = StyleSheet.create({
     borderWidth: 6,
     borderColor: "#F0E8E0",
     marginTop: 8,
+    backgroundColor: "#E0E0E0",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    overflow: "hidden",
+    paddingTop: 26,
+  },
+  avatarHead: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#B4B4B4",
+  },
+  avatarBody: {
+    marginTop: 14,
+    width: 104,
+    height: 56,
+    backgroundColor: "#C2C2C2",
+    borderRadius: 52,
   },
   name: {
     fontSize: 20,
