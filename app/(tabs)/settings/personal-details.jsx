@@ -9,15 +9,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../../context/auth-context";
+import { useRouter } from "expo-router";
 
 export default function PersonalDetailsScreen() {
   const { user, updateProfile } = useAuth();
+  const router = useRouter();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -36,18 +37,12 @@ export default function PersonalDetailsScreen() {
     if (error) {
       setError("");
     }
-    if (message) {
-      setMessage("");
-    }
   };
 
   const handleLastNameChange = (value) => {
     setLastName(value);
     if (error) {
       setError("");
-    }
-    if (message) {
-      setMessage("");
     }
   };
 
@@ -56,18 +51,12 @@ export default function PersonalDetailsScreen() {
     if (error) {
       setError("");
     }
-    if (message) {
-      setMessage("");
-    }
   };
 
   const handlePhoneChange = (value) => {
     setPhoneNumber(value);
     if (error) {
       setError("");
-    }
-    if (message) {
-      setMessage("");
     }
   };
 
@@ -84,7 +73,6 @@ export default function PersonalDetailsScreen() {
     try {
       setIsSaving(true);
       setError("");
-      setMessage("");
 
       await updateProfile({
         firstName,
@@ -93,7 +81,7 @@ export default function PersonalDetailsScreen() {
         phoneNumber,
       });
 
-      setMessage("Details updated successfully.");
+      router.back();
     } catch (updateError) {
       const info =
         updateError instanceof Error
@@ -163,7 +151,6 @@ export default function PersonalDetailsScreen() {
         </View>
 
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        {message ? <Text style={styles.messageText}>{message}</Text> : null}
 
         <TouchableOpacity
           style={styles.button}
@@ -245,12 +232,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 13,
     color: "#C03221",
-    fontWeight: "500",
-    textAlign: "center",
-  },
-  messageText: {
-    fontSize: 13,
-    color: "#2E7D32",
     fontWeight: "500",
     textAlign: "center",
   },
