@@ -11,10 +11,10 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useDiary } from "../../../context/diary-context";
 
 const MOOD_META = {
-  happy: { label: "Happy", color: "#68C290", icon: "emoticon-happy-outline" },
+  happy: { label: "Happy", color: "#F3C95C", icon: "emoticon-happy-outline" },
   sad: { label: "Sad", color: "#79A7F3", icon: "emoticon-sad-outline" },
   angry: { label: "Angry", color: "#F37A74", icon: "emoticon-angry-outline" },
-  calm: { label: "Calm", color: "#9BD6D0", icon: "emoticon-neutral-outline" },
+  calm: { label: "Calm", color: "#68C290", icon: "emoticon-neutral-outline" },
   love: { label: "In Love", color: "#E39BCB", icon: "heart-outline" },
 };
 

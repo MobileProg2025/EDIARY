@@ -49,13 +49,13 @@ export default function PostScreen() {
     [entries, entryId],
   );
 
-  const [selectedMood, setSelectedMood] = useState("sad");
+  const [selectedMood, setSelectedMood] = useState("");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [imageUri, setImageUri] = useState(null);
 
   const resetForm = useCallback(() => {
-    setSelectedMood("sad");
+    setSelectedMood("");
     setTitle("");
     setContent("");
     setImageUri(null);
@@ -63,7 +63,7 @@ export default function PostScreen() {
 
   useEffect(() => {
     if (entryId && existingEntry) {
-      setSelectedMood(existingEntry.mood ?? "sad");
+      setSelectedMood(existingEntry.mood ?? "");
       setTitle(existingEntry.title ?? "");
       setContent(existingEntry.content ?? "");
       setImageUri(existingEntry.imageUri ?? null);
@@ -206,9 +206,9 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingTop: 20,
     paddingBottom: 120,
-    gap: 24,
+    gap: 15,
   },
   title: {
     fontSize: 26,
@@ -221,13 +221,13 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     borderColor: BORDER_COLOR,
-    paddingVertical: 18,
+    paddingVertical: 10,
     paddingHorizontal: 18,
-    gap: 16,
+    gap: 10,
     alignItems: "center",
   },
   moodLabel: {
-    fontSize: 16,
+    fontSize: 20,
     color: "#3C3148",
     textAlign: "center",
     fontWeight: "600",
@@ -237,11 +237,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     width: "100%",
-    gap: 12,
+    gap: 10,
   },
   moodOption: {
-    width: 56,
-    height: 56,
+    width: 50,
+    height: 60,
     alignItems: "center",
     justifyContent: "space-between",
     borderRadius: 14,
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   moodOptionSelected: {
-    transform: [{ translateY: -2 }],
+    transform: [{ translateY: -7 }],
     shadowColor: "#000000",
     shadowOpacity: 0.12,
     shadowRadius: 6,

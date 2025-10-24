@@ -18,10 +18,10 @@ const LIST_BG = "#FEFEFC";
 const BORDER_COLOR = "#E6DAD1";
 
 const MOOD_META = {
-  happy: { label: "Happy", color: "#68C290", icon: "emoticon-happy-outline" },
+  happy: { label: "Happy", color: "#F3C95C", icon: "emoticon-happy-outline" },
   sad: { label: "Sad", color: "#79A7F3", icon: "emoticon-sad-outline" },
   angry: { label: "Angry", color: "#F37A74", icon: "emoticon-angry-outline" },
-  calm: { label: "Calm", color: "#9BD6D0", icon: "emoticon-neutral-outline" },
+  calm: { label: "Calm", color: "#68C290", icon: "emoticon-neutral-outline" },
   love: { label: "In Love", color: "#E39BCB", icon: "heart-outline" },
 };
 
@@ -163,12 +163,12 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 24,
-    paddingTop: 32,
+    paddingTop: 15,
     paddingBottom: 120,
-    gap: 18,
+    gap: 10,
   },
   header: {
-    gap: 24,
+    gap: 20,
   },
   brandRow: {
     flexDirection: "row",
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     height: 40,
   },
   brandText: {
-    fontSize: 24,
+    fontSize: 20,
     color: "#161616",
     fontWeight: "700",
   },
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
     backgroundColor: LIST_BG,
-    borderRadius: 16,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: BORDER_COLOR,
     paddingHorizontal: 16,
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   },
   emptyCard: {
     height: 96,
-    borderRadius: 16,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: BORDER_COLOR,
     backgroundColor: LIST_BG,
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   entryCard: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 16,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: BORDER_COLOR,
     backgroundColor: LIST_BG,

@@ -190,11 +190,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8F4F1",
   },
   container: {
-    paddingTop: 48,
+    paddingTop: 40,
     paddingBottom: 64,
     paddingHorizontal: 32,
     alignItems: "center",
-    gap: 24,
+    gap: 15,
   },
   title: {
     fontSize: 26,
