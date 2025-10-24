@@ -13,7 +13,7 @@ import { useDiary } from "../../context/diary-context";
 import { useAuth } from "../../context/auth-context";
 
 const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const DAY_SIZE = 40;
+const DAY_SIZE = 32;
 const SELECTED_COLOR = "#C99977";
 const DOT_COLOR = "#161616";
 
@@ -49,10 +49,10 @@ const dateKey = (date) =>
   ).padStart(2, "0")}`;
 
 const MOOD_META = {
-  happy: { label: "Happy", color: "#68C290", icon: "emoticon-happy-outline" },
+  happy: { label: "Happy", color: "#F3C95C", icon: "emoticon-happy-outline" },
   sad: { label: "Sad", color: "#79A7F3", icon: "emoticon-sad-outline" },
   angry: { label: "Angry", color: "#F37A74", icon: "emoticon-angry-outline" },
-  calm: { label: "Calm", color: "#9BD6D0", icon: "emoticon-neutral-outline" },
+  calm: { label: "Calm", color: "#68C290", icon: "emoticon-neutral-outline" },
   love: { label: "In Love", color: "#E39BCB", icon: "heart-outline" },
 };
 
@@ -369,12 +369,12 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 32,
+    paddingTop: 15,
     paddingBottom: 80,
-    gap: 32,
+    gap: 20,
   },
   header: {
-    gap: 24,
+    gap: 12,
   },
   brandRow: {
     flexDirection: "row",
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     height: 40,
   },
   brandText: {
-    fontSize: 24,
+    fontSize: 20,
     color: "#161616",
     fontWeight: "700",
   },
@@ -398,12 +398,12 @@ const styles = StyleSheet.create({
   },
   calendarCard: {
     backgroundColor: "#FEFEFC",
-    borderRadius: 16,
-    paddingVertical: 20,
-    paddingHorizontal: 18,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
     borderWidth: 1,
-    borderColor: "#E6DAD1",
-    gap: 20,
+    borderColor: "#E3C5B3",
+    gap: 10,
   },
   calendarHeader: {
     flexDirection: "row",
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   datesGrid: {
-    gap: 8,
+    gap: 2,
   },
   weekRow: {
     flexDirection: "row",
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
     backgroundColor: DOT_COLOR,
   },
   section: {
-    gap: 12,
+    gap: 10,
   },
   sectionHeader: {
     flexDirection: "row",
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 19,
     color: "#3C3148",
     fontWeight: "600",
   },
@@ -503,9 +503,9 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: "#FEFEFC",
-    borderRadius: 16,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#E6DAD1",
+    borderColor: "#E3C5B3",
     paddingVertical: 18,
     paddingHorizontal: 16,
     gap: 18,
