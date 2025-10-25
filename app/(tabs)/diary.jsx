@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
     backgroundColor: LIST_BG,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: BORDER_COLOR,
     paddingHorizontal: 16,
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   },
   emptyCard: {
     height: 96,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: BORDER_COLOR,
     backgroundColor: LIST_BG,
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   entryCard: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: BORDER_COLOR,
     backgroundColor: LIST_BG,
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   },
   entryTag: {
     alignSelf: "flex-start",
-    borderRadius: 10,
+    borderRadius: 12,
     paddingVertical: 4,
     paddingHorizontal: 12,
   },

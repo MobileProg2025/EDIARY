@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: "#FEFEFC",
-    borderRadius: 10,
+    borderRadius: 12,
     paddingVertical: 18,
     paddingHorizontal: 18,
     borderWidth: 1,
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   radioOuter: {
     width: 18,
     height: 18,
-    borderRadius: 11,
+    borderRadius: 12,
     borderWidth: 2,
     borderColor: "#3C3148",
     alignItems: "center",

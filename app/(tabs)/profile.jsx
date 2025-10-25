@@ -149,7 +149,7 @@ export default function ProfileScreen() {
 
         <Text style={styles.name}>{displayName}</Text>
         <Text style={styles.email}>{displayEmail}</Text>
-        {displayPhone ? <Text style={styles.phone}>{displayPhone}</Text> : null}
+        {/* {displayPhone ? <Text style={styles.phone}>{displayPhone}</Text> : null} */}
 
         <View style={styles.statsGrid}>
           {statRows.map((row, rowIndex) => (
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 132,
     height: 132,
-    borderRadius: 66,
+    borderRadius: 100,
     borderWidth: 6,
     borderColor: "#F0E8E0",
     marginTop: 8,
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   avatarHead: {
     width: 60,
     height: 60,
-    borderRadius: 30,
+    borderRadius: 100,
     backgroundColor: "#B4B4B4",
   },
   avatarBody: {
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     width: 104,
     height: 56,
     backgroundColor: "#C2C2C2",
-    borderRadius: 52,
+    borderRadius: 100,
   },
   name: {
     fontSize: 20,
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   statCard: {
-    borderRadius: 20,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,

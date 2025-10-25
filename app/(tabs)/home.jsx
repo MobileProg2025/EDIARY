@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
   },
   calendarCard: {
     backgroundColor: "#FEFEFC",
-    borderRadius: 10,
+    borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderWidth: 1,
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: "#FEFEFC",
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "#E3C5B3",
     paddingVertical: 18,
@@ -531,7 +531,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    borderRadius: 999,
+    borderRadius: 50,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },

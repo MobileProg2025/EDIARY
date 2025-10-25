@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   },
   moodCard: {
     backgroundColor: CARD_COLOR,
-    borderRadius: 18,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: BORDER_COLOR,
     paddingVertical: 10,
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     height: 60,
     alignItems: "center",
     justifyContent: "space-between",
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 2,
     paddingVertical: 8,
     paddingHorizontal: 6,
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   },
   inputCard: {
     backgroundColor: CARD_COLOR,
-    borderRadius: 18,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: BORDER_COLOR,
     paddingHorizontal: 16,
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   },
   imageCard: {
     height: 120,
-    borderRadius: 18,
+    borderRadius: 12,
     backgroundColor: "#E9D8C7",
     alignItems: "center",
     justifyContent: "center",
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: SAVE_COLOR,
-    borderRadius: 14,
+    borderRadius: 12,
     paddingVertical: 16,
     alignItems: "center",
   },
