@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8F4F1",
   },
   container: {
-    paddingTop: 40,
+    paddingTop: 30,
     paddingBottom: 64,
     paddingHorizontal: 32,
     alignItems: "center",

@@ -78,7 +78,7 @@ export default function Login() {
         <View style={styles.form}>
           <Text style={styles.label}>Enter email address</Text>
           <View style={styles.inputWrapper}>
-            <Ionicons name="person-circle" size={20} color="#161616" />
+            <Ionicons name="person" size={20} color="#161616" />
             <TextInput
               style={styles.input}
               placeholder="abc12@gmail.com"
@@ -143,12 +143,18 @@ export default function Login() {
           </View>
 
           <TouchableOpacity style={styles.socialButton}>
-            <FontAwesome name="google" size={18} color="#DB4437" />
+            <Image
+            source = {require("../assets/images/google.png")}
+            style={styles.socialLogo}
+            />
             <Text style={styles.socialText}>Continue with Google</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.socialButton}>
-            <FontAwesome name="facebook-official" size={18} color="#4267B2" />
+            <Image
+            source = {require("../assets/images/facebook.png")}
+            style={styles.socialLogo}
+            />
             <Text style={styles.socialText}>Continue with Facebook</Text>
           </TouchableOpacity>
         </View>
@@ -165,7 +171,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     paddingHorizontal: 32,
-    paddingVertical: 48,
+    paddingVertical: 45,
   },
   logoContainer: {
     alignItems: "center",
@@ -194,7 +200,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E0E0E0",
     paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingVertical: 6,
+    elevation: 1,
   },
   input: {
     flex: 1,
@@ -210,11 +217,12 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   forgotText: {
+    marginTop: 10,
     fontSize: 13,
     color: "#161616",
   },
   primaryButton: {
-    marginTop: 28,
+    marginTop: 20,
     backgroundColor: "#000000",
     borderRadius: 12,
     paddingVertical: 16,
@@ -257,7 +265,7 @@ const styles = StyleSheet.create({
   divider: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 32,
+    marginTop: 20,
     marginBottom: 20,
     gap: 12,
   },
@@ -280,12 +288,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#E0E0E0",
-    paddingVertical: 14,
-    marginBottom: 16,
+    paddingVertical: 15,
+    marginBottom: 12,
     gap: 10,
+    elevation: 1,
+  },
+  socialLogo: {
+    width: 20,  
+    height: 20,
+    marginRight: 10, 
+    resizeMode: "contain",
   },
   socialText: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#161616",
     fontWeight: "500",
   },

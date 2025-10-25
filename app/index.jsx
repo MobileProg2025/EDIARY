@@ -85,18 +85,19 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   logo: {
-    width: 160,
-    height: 160,
+    width: 180,
+    height: 180,
   },
   tagline: {
+    fontWeight: "600",
     marginTop: 16,
     fontSize: 16,
     color: "#161616",
   },
   actions: {
     width: "100%",
-    marginTop: 48,
-    gap: 16,
+    marginTop: 40,
+    gap: 12,
   },
   button: {
     paddingVertical: 16,
@@ -107,7 +108,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000000",
   },
   signupButton: {
-    backgroundColor: "#3C3148",
+    backgroundColor: "#57505E",
   },
   buttonText: {
     color: "#FFFFFF",

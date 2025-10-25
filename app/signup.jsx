@@ -137,7 +137,7 @@ export default function Signup() {
             Enter email address
           </Text>
           <View style={styles.inputWrapper}>
-            <Ionicons name="person-circle" size={20} color="#161616" />
+            <Ionicons name="person" size={20} color="#161616" />
             <TextInput
               style={styles.input}
               placeholder="abc12@gmail.com"
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     paddingHorizontal: 32,
-    paddingVertical: 48,
+    paddingVertical: 45,
   },
   logoContainer: {
     alignItems: "center",
@@ -258,6 +258,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E0E0E0",
     overflow: "hidden",
+    paddingVertical: 6,
+    elevation: 1,
   },
   countryPicker: {
     flexDirection: "row",
@@ -278,7 +280,7 @@ const styles = StyleSheet.create({
     color: "#161616",
   },
   sectionSpacing: {
-    marginTop: 24,
+    marginTop: 17,
   },
   inputWrapper: {
     flexDirection: "row",
@@ -288,7 +290,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E0E0E0",
     paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingVertical: 6,
+    elevation: 1,
   },
   input: {
     flex: 1,
