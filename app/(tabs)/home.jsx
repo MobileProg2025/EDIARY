@@ -138,8 +138,13 @@ export default function HomeScreen() {
     return "there";
   }, [user]);
 
+  const recentEntriesExpanded = useMemo(
+    () => sortedEntries.slice(0, 3),
+    [sortedEntries],
+  );
+
   const recentEntriesDisplay = showAllRecent
-    ? sortedEntries
+    ? recentEntriesExpanded
     : recentEntriesLimited;
 
   const onThisDayEntriesDisplay = showAllOnThisDay
