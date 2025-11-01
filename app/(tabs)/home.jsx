@@ -409,6 +409,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E3C5B3",
     gap: 10,
+    elevation: 2
   },
   calendarHeader: {
     flexDirection: "row",
