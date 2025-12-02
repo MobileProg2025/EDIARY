@@ -17,7 +17,7 @@ export default function PersonalDetailsScreen() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [username, setUsername] = useState("");
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -29,7 +29,7 @@ export default function PersonalDetailsScreen() {
     setFirstName(user.firstName ?? "");
     setLastName(user.lastName ?? "");
     setEmail(user.email ?? "");
-    setPhoneNumber(user.phoneNumber ?? "");
+    setUsername(user.username ?? "");
   }, [user]);
 
   const handleFirstNameChange = (value) => {
@@ -53,8 +53,8 @@ export default function PersonalDetailsScreen() {
     }
   };
 
-  const handlePhoneChange = (value) => {
-    setPhoneNumber(value);
+  const handleUsernameChange = (value) => {
+    setUsername(value);
     if (error) {
       setError("");
     }
@@ -78,7 +78,7 @@ export default function PersonalDetailsScreen() {
         firstName,
         lastName,
         email,
-        phoneNumber,
+        username,
       });
 
       router.back();
@@ -104,7 +104,20 @@ export default function PersonalDetailsScreen() {
         <Text style={styles.title}>Personal Details</Text>
 
         <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Name</Text>
+          <Text style={styles.label}>Username</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Username"
+            keyboardType="default"
+            autoCapitalize="none"
+            placeholderTextColor="#C0B7AF"
+            value={username}
+            onChangeText={handleUsernameChange}
+          />
+        </View>
+
+        <View style={styles.fieldGroup}>
+          <Text style={styles.label}>First Name</Text>
           <TextInput
             style={styles.input}
             placeholder="Name"
@@ -135,18 +148,6 @@ export default function PersonalDetailsScreen() {
             placeholderTextColor="#C0B7AF"
             value={email}
             onChangeText={handleEmailChange}
-          />
-        </View>
-
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Phone Number</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Phone Number"
-            keyboardType="phone-pad"
-            placeholderTextColor="#C0B7AF"
-            value={phoneNumber}
-            onChangeText={handlePhoneChange}
           />
         </View>
 

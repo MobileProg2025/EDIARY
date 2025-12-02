@@ -15,7 +15,7 @@ import { useAuth } from "../context/auth-context";
 
 export default function Login() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -28,8 +28,8 @@ export default function Login() {
     }
   }, [initializing, isAuthenticated, router]);
 
-  const handleEmailChange = (value) => {
-    setEmail(value);
+  const handleUsernameChange = (value) => {
+    setUsername(value);
     if (error) {
       setError("");
     }
@@ -49,7 +49,7 @@ export default function Login() {
 
     try {
       setIsSubmitting(true);
-      await login({ email, password });
+      await login({ username, password });
       setError("");
       router.replace("/home");
     } catch (loginError) {
@@ -76,23 +76,23 @@ export default function Login() {
         </View>
 
         <View style={styles.form}>
-          <Text style={styles.label}>Enter email address</Text>
+          <Text style={styles.label}>Username</Text>
           <View style={styles.inputWrapper}>
-            <Ionicons name="person" size={20} color="#161616" />
+            <Ionicons name="person" size={15} color="#161616" />
             <TextInput
               style={styles.input}
-              placeholder="abc12@gmail.com"
+              placeholder="username"
               placeholderTextColor="#9B9B9B"
-              value={email}
-              onChangeText={handleEmailChange}
-              keyboardType="email-address"
+              value={username}
+              onChangeText={handleUsernameChange}
+              keyboardType="default"
               autoCapitalize="none"
             />
           </View>
 
-          <Text style={[styles.label, styles.labelSpacing]}>Enter password</Text>
+          <Text style={[styles.label, styles.labelSpacing]}>Password</Text>
           <View style={styles.inputWrapper}>
-            <Ionicons name="lock-closed" size={20} color="#161616" />
+            <Ionicons name="lock-closed" size={15} color="#161616" />
             <TextInput
               style={styles.input}
               placeholder="************"

@@ -15,7 +15,7 @@ import { useAuth } from "../context/auth-context";
 
 export default function Signup() {
   const router = useRouter();
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -31,8 +31,8 @@ export default function Signup() {
     }
   }, [initializing, isAuthenticated, router]);
 
-  const handlePhoneChange = (value) => {
-    setPhoneNumber(value);
+  const handleUsernameChange = (value) => {
+    setUsername(value);
     if (error) {
       setError("");
     }
@@ -88,7 +88,7 @@ export default function Signup() {
       await signup({
         email: trimmedEmail,
         password: trimmedPassword,
-        phoneNumber,
+        username,
       });
       router.replace("/home");
     } catch (signupError) {
@@ -117,19 +117,19 @@ export default function Signup() {
         </View>
 
         <View style={styles.form}>
-          <Text style={styles.label}>Enter your mobile number</Text>
-          <View style={styles.phoneInputWrapper}>
-            <TouchableOpacity style={styles.countryPicker}>
-              <Text style={styles.countryCode}>+91</Text>
-              <Ionicons name="chevron-down" size={16} color="#161616" />
-            </TouchableOpacity>
+          <Text style={[styles.label, styles.sectionSpacing]}>
+            Enter your username
+          </Text>
+          <View style={styles.inputWrapper}>
+            <Ionicons name="person" size={15} color="#161616" />
             <TextInput
-              style={styles.phoneInput}
-              placeholder="1712345678"
+              style={styles.input}
+              placeholder="username"
               placeholderTextColor="#9B9B9B"
-              keyboardType="phone-pad"
-              value={phoneNumber}
-              onChangeText={handlePhoneChange}
+              keyboardType="default"
+              autoCapitalize="none"
+              value={username}
+              onChangeText={handleUsernameChange}
             />
           </View>
 
@@ -137,7 +137,7 @@ export default function Signup() {
             Enter email address
           </Text>
           <View style={styles.inputWrapper}>
-            <Ionicons name="person" size={20} color="#161616" />
+            <Ionicons name="person" size={15} color="#161616" />
             <TextInput
               style={styles.input}
               placeholder="abc12@gmail.com"
@@ -153,7 +153,7 @@ export default function Signup() {
             Enter password
           </Text>
           <View style={styles.inputWrapper}>
-            <Ionicons name="lock-closed" size={20} color="#161616" />
+            <Ionicons name="lock-closed" size={15} color="#161616" />
             <TextInput
               style={styles.input}
               placeholder="************"
@@ -178,7 +178,7 @@ export default function Signup() {
             Re - enter password
           </Text>
           <View style={styles.inputWrapper}>
-            <Ionicons name="lock-closed" size={20} color="#161616" />
+            <Ionicons name="lock-closed" size={15} color="#161616" />
             <TextInput
               style={styles.input}
               placeholder="************"
@@ -249,35 +249,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#161616",
     marginBottom: 8,
-  },
-  phoneInputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    overflow: "hidden",
-    paddingVertical: 6,
-    elevation: 1,
-  },
-  countryPicker: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    gap: 6,
-    height: "100%",
-  },
-  countryCode: {
-    fontSize: 14,
-    color: "#161616",
-  },
-  phoneInput: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    fontSize: 14,
-    color: "#161616",
   },
   sectionSpacing: {
     marginTop: 17,

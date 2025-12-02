@@ -53,9 +53,9 @@ const ensureAdminAccount = async (users) => {
       id: "user-admin",
       email: ADMIN_CANONICAL_EMAIL,
       password: "admin",
-      firstName: "Ken Louie",
-      lastName: "Neri",
-      phoneNumber: "09057361308",
+      firstName: "Admin",
+      lastName: "",
+      username: "01234567890",
       createdAt: new Date().toISOString(),
     };
     mutated = true;
@@ -102,10 +102,10 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const signup = useCallback(async ({ email, password, phoneNumber }) => {
+  const signup = useCallback(async ({ email, password, username }) => {
     const emailCanonical = canonicalEmail(email);
     const passwordTrimmed = sanitizeText(password);
-    const phoneTrimmed = sanitizeText(phoneNumber);
+    const usernameTrimmed = sanitizeText(username);
 
     if (!emailCanonical) {
       throw new Error("Email is required.");
@@ -129,7 +129,7 @@ export function AuthProvider({ children }) {
       id: `user-${Date.now()}`,
       email: emailCanonical,
       password: passwordTrimmed,
-      phoneNumber: phoneTrimmed,
+      username: usernameTrimmed,
       firstName: "",
       lastName: "",
       createdAt: new Date().toISOString(),
@@ -147,22 +147,46 @@ export function AuthProvider({ children }) {
     return newUser;
   }, []);
 
-  const login = useCallback(async ({ email, password }) => {
-    const emailCanonical = canonicalEmail(email);
+  const login = useCallback(async ({ username, email, password }) => {
     const passwordTrimmed = sanitizeText(password);
+    const usernameTrimmed = sanitizeText(username || "");
+    const emailTrimmed = sanitizeText(email || "");
 
-    if (!emailCanonical || !passwordTrimmed) {
-      throw new Error("Email and password are required.");
+    if (!passwordTrimmed) {
+      throw new Error("Password is required.");
+    }
+
+    if (!usernameTrimmed && !emailTrimmed) {
+      throw new Error("Username or email is required.");
     }
 
     const users = await ensureAdminAccount(await readUsers());
-    const account = users[emailCanonical];
+    
+    // Find user by username or email
+    let account = null;
+    let accountEmail = null;
 
-    if (!account || account.password !== passwordTrimmed) {
-      throw new Error("Invalid email or password.");
+    if (usernameTrimmed) {
+      // Search for user by username
+      for (const [email, user] of Object.entries(users)) {
+        if (user.username?.toLowerCase() === usernameTrimmed.toLowerCase()) {
+          account = user;
+          accountEmail = email;
+          break;
+        }
+      }
+    } else if (emailTrimmed) {
+      // Search by email
+      const emailCanonical = canonicalEmail(emailTrimmed);
+      account = users[emailCanonical];
+      accountEmail = emailCanonical;
     }
 
-    await AsyncStorage.setItem(ACTIVE_USER_KEY, emailCanonical);
+    if (!account || account.password !== passwordTrimmed) {
+      throw new Error("Invalid username or password.");
+    }
+
+    await AsyncStorage.setItem(ACTIVE_USER_KEY, accountEmail);
     setUser(account);
 
     return account;
@@ -208,10 +232,10 @@ export function AuthProvider({ children }) {
           updates.lastName != null
             ? sanitizeText(updates.lastName)
             : user.lastName,
-        phoneNumber:
-          updates.phoneNumber != null
-            ? sanitizeText(updates.phoneNumber)
-            : user.phoneNumber,
+        username:
+          updates.username != null
+            ? sanitizeText(updates.username)
+            : user.username,
         updatedAt: new Date().toISOString(),
       };
 

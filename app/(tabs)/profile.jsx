@@ -132,7 +132,7 @@ export default function ProfileScreen() {
   }, [user]);
 
   const displayEmail = user?.email ?? "Add your email";
-  const displayPhone = user?.phoneNumber?.trim() ?? "";
+  const displayUsername = user?.username?.trim() ?? "";
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -147,9 +147,11 @@ export default function ProfileScreen() {
           <View style={styles.avatarBody} />
         </View>
 
-        <Text style={styles.name}>{displayName}</Text>
+        {displayUsername ? <Text style={styles.username}>@{displayUsername}</Text> : null}
+        {displayName && displayName !== "Your Profile" && displayName !== user?.email ? (
+          <Text style={styles.fullName}>{displayName}</Text>
+        ) : null}
         <Text style={styles.email}>{displayEmail}</Text>
-        {/* {displayPhone ? <Text style={styles.phone}>{displayPhone}</Text> : null} */}
 
         <View style={styles.statsGrid}>
           {statRows.map((row, rowIndex) => (
@@ -194,7 +196,7 @@ const styles = StyleSheet.create({
     paddingBottom: 64,
     paddingHorizontal: 32,
     alignItems: "center",
-    gap: 15,
+    gap: 12,
   },
   title: {
     fontSize: 26,
@@ -227,10 +229,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#C2C2C2",
     borderRadius: 100,
   },
-  name: {
+  username: {
     fontSize: 20,
     color: "#3C3148",
     fontWeight: "700",
+    letterSpacing: 0.3,
+  },
+  fullName: {
+    fontSize: 16,
+    color: "#3C3148",
+    fontWeight: "500",
   },
   email: {
     fontSize: 14,

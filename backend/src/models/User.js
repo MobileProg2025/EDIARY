@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema({
         default: "",
     },
 
-    phoneNumber: {
+    username: {
         type: String,
         default: "",
     },

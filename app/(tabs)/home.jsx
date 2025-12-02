@@ -124,6 +124,10 @@ export default function HomeScreen() {
       return "there";
     }
 
+    if (user.username?.trim()) {
+      return user.username.trim();
+    }
+
     const first = user.firstName?.trim();
     const last = user.lastName?.trim();
     if (first || last) {
