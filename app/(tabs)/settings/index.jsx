@@ -90,7 +90,7 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        <View style={styles.section}>
+        {/*<View style={styles.section}>
           <View style={styles.card}>
             <Text style={styles.sectionLabel}>Theme</Text>
             <TouchableOpacity
@@ -119,7 +119,7 @@ export default function SettingsScreen() {
               </View>
             </TouchableOpacity>
           </View>
-        </View>
+        </View>*/}
 
         <View style={styles.section}>
           <View style={styles.card}>
