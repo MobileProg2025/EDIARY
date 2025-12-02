@@ -12,8 +12,12 @@ router.post("/register", async (req, res) => {
     try {
         const { email, password, username } = req.body;
 
-        if (!email || !password) {
+        if (!email || !password || !username) {
             return res.status(400).json({ message: "All fields are required" })
+        }
+
+        if (username.length < 6) {
+            return res.status(400).json({ message: "Username should be at least 6 characters long" })
         }
 
         if (password.length < 6) {
@@ -56,12 +60,12 @@ router.post("/register", async (req, res) => {
 
 router.post("/login", async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { username, password } = req.body;
 
-        if (!email || !password)
+        if (!username || !password)
             return res.status(400).json({ message: "All fields are required" });
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ username });
         if (!user)
             return res.status(400).json({ message: "Invalid credentials" });
 
