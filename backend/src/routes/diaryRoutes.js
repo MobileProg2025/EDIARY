@@ -87,21 +87,15 @@ router.put("/:id", async (req, res) => {
     try {
         const { mood, title, content, imageUri } = req.body;
 
-        const diary = await Diary.findOne({
-            _id: req.params.id,
-            user: req.user._id
-        });
+        const diary = await Diary.findOneAndUpdate(
+            { _id: req.params.id, user: req.user._id },
+            { $set: req.body },
+            { new: true, runValidators: true }
+        );
 
         if (!diary) {
             return res.status(404).json({ message: "Diary entry not found" });
         }
-
-        if (mood !== undefined) diary.mood = mood;
-        if (title !== undefined) diary.title = title;
-        if (content !== undefined) diary.content = content;
-        if (imageUri !== undefined) diary.imageUri = imageUri;
-
-        await diary.save();
 
         res.status(200).json(diary);
     } catch (error) {
