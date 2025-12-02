@@ -1,0 +1,89 @@
+import express from "express";
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
+
+const router = express.Router();
+
+const generateToken = (userId) => {
+    return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "15d" });
+}
+
+router.post("/register", async (req, res) => {
+    try {
+        const { email, password, phoneNumber } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ message: "All fields are required" })
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ message: "Password should be at least 6 characters long" })
+        }
+
+        const existingEmail = await User.findOne({ email });
+        if (existingEmail) {
+            return res.status(400).json({ message: "Email address already used" })
+        }
+
+        const profileImage = `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${email}`;
+
+        const user = new User({
+            email,
+            password,
+            profileImage,
+            phoneNumber,
+        });
+
+        await user.save();
+
+        const token = generateToken(user._id);
+        res.status(201).json({
+            token,
+            user: {
+                _id: user._id,
+                email: user.email,
+                phoneNumber: user.phoneNumber,
+                profileImage: user.profileImage
+            },
+        });
+
+    } catch (error) {
+        console.log("Error in register route", error);
+        return res.status(500).json({ message: "Internal server error" });
+
+    }
+});
+
+router.post("/login", async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password)
+            return res.status(400).json({ message: "All fields are required" });
+
+        const user = await User.findOne({ email });
+        if (!user)
+            return res.status(400).json({ message: "Invalid credentials" });
+
+        const isPasswordCorrect = await user.comparePassword(password);
+        if (!isPasswordCorrect)
+            return res.status(400).json({ message: "Invalid credentials" });
+
+        const token = generateToken(user._id);
+        res.status(201).json({
+            token,
+            user: {
+                _id: user._id,
+                email: user.email,
+                phoneNumber: user.phoneNumber,
+                profileImage: user.profileImage
+            },
+        });
+
+    } catch (error) {
+        console.log("Error in login route", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+export default router;
