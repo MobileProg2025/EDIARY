@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const diarySchema = new mongoose.Schema({
     mood: {
         type: String,
-        enum: ["sad", "angry", "calm", "happy", "in love"],
+        enum: ["sad", "angry", "calm", "happy", "love"],
         required: true,
     },
 
@@ -12,20 +12,25 @@ const diarySchema = new mongoose.Schema({
         required: true
     },
 
-    body: {
+    content: {
         type: String,
         required: true
     },
 
-    image: {
+    imageUri: {
         type: String,
         default: null
     },
 
     user: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true
+    },
+
+    deletedAt: {
+        type: Date,
+        default: null
     },
 }, 
 { 

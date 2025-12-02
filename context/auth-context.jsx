@@ -16,6 +16,7 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -23,10 +24,11 @@ export function AuthProvider({ children }) {
 
     const hydrate = async () => {
       try {
-        const token = await AsyncStorage.getItem(TOKEN_KEY);
+        const storedToken = await AsyncStorage.getItem(TOKEN_KEY);
         const storedUser = await AsyncStorage.getItem(USER_KEY);
 
-        if (isMounted && token && storedUser) {
+        if (isMounted && storedToken && storedUser) {
+          setToken(storedToken);
           setUser(JSON.parse(storedUser));
         }
       } catch (error) {
@@ -78,6 +80,7 @@ export function AuthProvider({ children }) {
       ]);
 
       console.log("Signup successful!");
+      setToken(data.token);
       setUser(data.user);
       return data.user;
     } catch (error) {
@@ -112,6 +115,7 @@ export function AuthProvider({ children }) {
         [USER_KEY, JSON.stringify(data.user)],
       ]);
 
+      setToken(data.token);
       setUser(data.user);
       return data.user;
     } catch (error) {
@@ -122,6 +126,7 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
+    setToken(null);
     setUser(null);
   }, []);
 
@@ -148,17 +153,32 @@ export function AuthProvider({ children }) {
     [user]
   );
 
+  const getAuthToken = useCallback(async () => {
+    if (token) {
+      return token;
+    }
+    // Try to get from AsyncStorage if not in state
+    const storedToken = await AsyncStorage.getItem(TOKEN_KEY);
+    if (storedToken) {
+      setToken(storedToken);
+      return storedToken;
+    }
+    return null;
+  }, [token]);
+
   const value = useMemo(
     () => ({
       user,
+      token,
       isAuthenticated: user != null,
       initializing: !hydrated,
       signup,
       login,
       logout,
       updateProfile,
+      getAuthToken,
     }),
-    [user, hydrated, signup, login, logout, updateProfile]
+    [user, token, hydrated, signup, login, logout, updateProfile, getAuthToken]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

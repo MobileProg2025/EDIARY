@@ -9,6 +9,7 @@ import {
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "./auth-context";
+import { API_BASE_URL } from "../config";
 
 const DiaryContext = createContext(null);
 
@@ -69,124 +70,106 @@ const canonicalEmail = (value) => {
 const entriesKeyFor = (email) => `@ediary/entries/${email}`;
 const trashKeyFor = (email) => `@ediary/trash/${email}`;
 
-const parseStoredList = (value, fallback) => {
-  if (!value) {
-    return fallback;
-  }
-
-  try {
-    const parsed = JSON.parse(value);
-    if (Array.isArray(parsed)) {
-      return parsed;
-    }
-  } catch (error) {
-    console.warn("Failed to parse stored diary list", error);
-  }
-
-  return fallback;
-};
-
-const buildEntry = (partial) => {
-  const now = new Date();
-  return {
-    id: partial.id ?? `entry-${now.getTime()}`,
-    createdAt: partial.createdAt ?? now.toISOString(),
-    title: partial.title?.trim() ?? "",
-    content: partial.content?.trim() ?? "",
-    mood: partial.mood ?? "calm",
-    imageUri: partial.imageUri ?? null,
-  };
-};
-
-const normalizeUpdates = (updates) => {
-  const normalized = { ...updates };
-  if (normalized.title != null) {
-    normalized.title = normalized.title.trim();
-  }
-  if (normalized.content != null) {
-    normalized.content = normalized.content.trim();
-  }
-  return normalized;
-};
+// Helper to convert MongoDB diary to local diary format
+const convertApiDiary = (apiDiary) => ({
+  id: apiDiary._id,
+  mood: apiDiary.mood,
+  title: apiDiary.title,
+  content: apiDiary.content,
+  imageUri: apiDiary.imageUri,
+  createdAt: apiDiary.createdAt || apiDiary.updatedAt,
+});
 
 export function DiaryProvider({ children }) {
-  const { user } = useAuth();
+  const { user, getAuthToken } = useAuth();
   const [entries, setEntries] = useState([]);
   const [trashEntries, setTrashEntries] = useState([]);
   const [dataEmail, setDataEmail] = useState(null);
   const [isReady, setIsReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const previousEmailRef = useRef(null);
 
-  const migrateDiaryData = useCallback(async (fromEmail, toEmail) => {
-    if (!fromEmail || !toEmail || fromEmail === toEmail) {
-      return;
-    }
-
-    const fromEntriesKey = entriesKeyFor(fromEmail);
-    const fromTrashKey = trashKeyFor(fromEmail);
-    const toEntriesKey = entriesKeyFor(toEmail);
-    const toTrashKey = trashKeyFor(toEmail);
+  // Load entries from API
+  const loadEntriesFromAPI = useCallback(async () => {
+    const token = await getAuthToken();
+    if (!token) return null;
 
     try {
-      const results = await AsyncStorage.multiGet([
-        fromEntriesKey,
-        fromTrashKey,
-        toEntriesKey,
-        toTrashKey,
-      ]);
+      const response = await fetch(`${API_BASE_URL}/diaries`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      const fromEntriesRaw = results[0]?.[1] ?? null;
-      const fromTrashRaw = results[1]?.[1] ?? null;
-      const toEntriesRaw = results[2]?.[1] ?? null;
-      const toTrashRaw = results[3]?.[1] ?? null;
-
-      const updates = [];
-      const keysToRemove = [];
-
-      if (fromEntriesRaw && !toEntriesRaw) {
-        updates.push([toEntriesKey, fromEntriesRaw]);
-        keysToRemove.push(fromEntriesKey);
+      if (!response.ok) {
+        throw new Error("Failed to fetch entries");
       }
 
-      if (fromTrashRaw && !toTrashRaw) {
-        updates.push([toTrashKey, fromTrashRaw]);
-        keysToRemove.push(fromTrashKey);
-      }
-
-      if (updates.length) {
-        await AsyncStorage.multiSet(updates);
-      }
-
-      if (keysToRemove.length) {
-        await AsyncStorage.multiRemove(keysToRemove);
-      }
+      const data = await response.json();
+      return data.map(convertApiDiary);
     } catch (error) {
-      console.warn("Failed to migrate diary data", error);
+      console.warn("Failed to load entries from API", error);
+      return null;
     }
-  }, []);
+  }, [getAuthToken]);
+
+  // Load trash entries from API
+  const loadTrashFromAPI = useCallback(async () => {
+    const token = await getAuthToken();
+    if (!token) return null;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/diaries/trash`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch trash");
+      }
+
+      const data = await response.json();
+      return data.map(apiDiary => ({
+        ...convertApiDiary(apiDiary),
+        trashedAt: apiDiary.deletedAt,
+      }));
+    } catch (error) {
+      console.warn("Failed to load trash from API", error);
+      return null;
+    }
+  }, [getAuthToken]);
 
   useEffect(() => {
     let isMounted = true;
 
-    const resetState = (nextEntries, nextTrash, email) => {
-      if (!isMounted) {
-        return;
-      }
-
-      setEntries(nextEntries);
-      setTrashEntries(nextTrash);
-      setDataEmail(email);
-      setIsReady(true);
-    };
-
     const loadForEmail = async (email) => {
       setIsReady(false);
+      setIsLoading(true);
       setDataEmail(null);
 
-      const entriesKey = entriesKeyFor(email);
-      const trashKey = trashKeyFor(email);
-
       try {
+        // Try to load from API first
+        const apiEntries = await loadEntriesFromAPI();
+        const apiTrash = await loadTrashFromAPI();
+        
+        if (apiEntries && isMounted) {
+          setEntries(apiEntries);
+          setTrashEntries(apiTrash || []);
+          setDataEmail(email);
+          setIsReady(true);
+          setIsLoading(false);
+          return;
+        }
+
+        // Fallback to AsyncStorage
+        const entriesKey = entriesKeyFor(email);
+        const trashKey = trashKeyFor(email);
+
         const result = await AsyncStorage.multiGet([entriesKey, trashKey]);
         const storedEntries = result[0]?.[1] ?? null;
         const storedTrash = result[1]?.[1] ?? null;
@@ -194,23 +177,41 @@ export function DiaryProvider({ children }) {
         const fallbackEntries =
           email === ADMIN_CANONICAL_EMAIL ? INITIAL_ENTRIES : [];
 
-        const nextEntries = parseStoredList(storedEntries, fallbackEntries);
-        const nextTrash = parseStoredList(storedTrash, []);
+        const nextEntries = storedEntries
+          ? JSON.parse(storedEntries)
+          : fallbackEntries;
+        const nextTrash = storedTrash ? JSON.parse(storedTrash) : [];
 
-        resetState(nextEntries, nextTrash, email);
+        if (isMounted) {
+          setEntries(nextEntries);
+          setTrashEntries(nextTrash);
+          setDataEmail(email);
+          setIsReady(true);
+        }
       } catch (error) {
         console.warn("Failed to load diary data", error);
-        resetState(
-          email === ADMIN_CANONICAL_EMAIL ? INITIAL_ENTRIES : [],
-          [],
-          email,
-        );
+        const fallbackEntries =
+          email === ADMIN_CANONICAL_EMAIL ? INITIAL_ENTRIES : [];
+        
+        if (isMounted) {
+          setEntries(fallbackEntries);
+          setTrashEntries([]);
+          setDataEmail(email);
+          setIsReady(true);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     const handleSignedOut = () => {
       previousEmailRef.current = null;
-      resetState([], [], null);
+      setEntries([]);
+      setTrashEntries([]);
+      setDataEmail(null);
+      setIsReady(true);
     };
 
     const hydrate = async () => {
@@ -225,11 +226,6 @@ export function DiaryProvider({ children }) {
         return;
       }
 
-      const previousEmail = previousEmailRef.current;
-      if (previousEmail && previousEmail !== currentEmail) {
-        await migrateDiaryData(previousEmail, currentEmail);
-      }
-
       await loadForEmail(currentEmail);
       previousEmailRef.current = currentEmail;
     };
@@ -239,100 +235,240 @@ export function DiaryProvider({ children }) {
     return () => {
       isMounted = false;
     };
-  }, [user, migrateDiaryData]);
+  }, [user, loadEntriesFromAPI, loadTrashFromAPI]);
 
-  useEffect(() => {
-    if (!user || !isReady) {
-      return;
-    }
+  // Add entry to API
+  const addEntry = useCallback(
+    async (partialEntry) => {
+      const token = await getAuthToken();
+      
+      const entryData = {
+        mood: partialEntry.mood || "calm",
+        title: partialEntry.title?.trim() || "Untitled memory",
+        content: partialEntry.content?.trim() || "",
+        imageUri: partialEntry.imageUri || null,
+      };
 
-    const email = canonicalEmail(user.email);
-    if (!email || dataEmail !== email) {
-      return;
-    }
-
-    const persist = async () => {
       try {
-        const key = entriesKeyFor(email);
-        await AsyncStorage.setItem(key, JSON.stringify(entries));
+        // Try to save to API
+        if (token) {
+          const response = await fetch(`${API_BASE_URL}/diaries`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(entryData),
+          });
+
+          if (response.ok) {
+            const apiDiary = await response.json();
+            const newEntry = convertApiDiary(apiDiary);
+            setEntries((prev) => [newEntry, ...prev]);
+            return;
+          }
+        }
+
+        // Fallback to local storage
+        const localEntry = {
+          id: `entry-${Date.now()}`,
+          ...entryData,
+          createdAt: new Date().toISOString(),
+        };
+        setEntries((prev) => [localEntry, ...prev]);
       } catch (error) {
-        console.warn("Failed to persist diary entries", error);
+        console.warn("Failed to add entry via API, using local fallback", error);
+        const localEntry = {
+          id: `entry-${Date.now()}`,
+          ...entryData,
+          createdAt: new Date().toISOString(),
+        };
+        setEntries((prev) => [localEntry, ...prev]);
       }
-    };
+    },
+    [getAuthToken]
+  );
 
-    persist();
-  }, [entries, user, dataEmail, isReady]);
+  // Update entry in API
+  const updateEntry = useCallback(
+    async (id, updates) => {
+      const token = await getAuthToken();
 
-  useEffect(() => {
-    if (!user || !isReady) {
-      return;
-    }
-
-    const email = canonicalEmail(user.email);
-    if (!email || dataEmail !== email) {
-      return;
-    }
-
-    const persist = async () => {
       try {
-        const key = trashKeyFor(email);
-        await AsyncStorage.setItem(key, JSON.stringify(trashEntries));
+        // Try to update in API
+        if (token) {
+          const response = await fetch(`${API_BASE_URL}/diaries/${id}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(updates),
+          });
+
+          if (response.ok) {
+            const apiDiary = await response.json();
+            const updatedEntry = convertApiDiary(apiDiary);
+            setEntries((prev) =>
+              prev.map((entry) => (entry.id === id ? updatedEntry : entry))
+            );
+            return;
+          }
+        }
+
+        // Fallback to local update
+        setEntries((prev) =>
+          prev.map((entry) => (entry.id === id ? { ...entry, ...updates } : entry))
+        );
       } catch (error) {
-        console.warn("Failed to persist trash entries", error);
+        console.warn("Failed to update entry via API, using local fallback", error);
+        setEntries((prev) =>
+          prev.map((entry) => (entry.id === id ? { ...entry, ...updates } : entry))
+        );
       }
-    };
+    },
+    [getAuthToken]
+  );
 
-    persist();
-  }, [trashEntries, user, dataEmail, isReady]);
+  // Delete entry (soft delete - move to trash)
+  const deleteEntry = useCallback(
+    async (id) => {
+      const token = await getAuthToken();
 
-  const addEntry = useCallback((partialEntry) => {
-    setEntries((prev) => {
-      const entry = buildEntry(partialEntry);
-      return [entry, ...prev];
-    });
-  }, []);
+      try {
+        // Try to soft delete via API
+        if (token) {
+          const response = await fetch(`${API_BASE_URL}/diaries/${id}`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
 
-  const updateEntry = useCallback((id, updates) => {
-    const next = normalizeUpdates(updates);
-    setEntries((prev) =>
-      prev.map((entry) => (entry.id === id ? { ...entry, ...next } : entry)),
-    );
-  }, []);
+          if (response.ok) {
+            const data = await response.json();
+            const trashedEntry = {
+              ...convertApiDiary(data.diary),
+              trashedAt: data.diary.deletedAt,
+            };
+            
+            setEntries((prev) => prev.filter((entry) => entry.id !== id));
+            setTrashEntries((prev) => [trashedEntry, ...prev]);
+            return;
+          }
+        }
 
-  const deleteEntry = useCallback((id) => {
-    setEntries((prev) => {
-      const target = prev.find((entry) => entry.id === id);
-      if (!target) {
-        return prev;
+        // Fallback to local delete
+        setEntries((prev) => {
+          const target = prev.find((entry) => entry.id === id);
+          if (!target) return prev;
+
+          setTrashEntries((trashPrev) => [
+            { ...target, trashedAt: new Date().toISOString() },
+            ...trashPrev,
+          ]);
+
+          return prev.filter((entry) => entry.id !== id);
+        });
+      } catch (error) {
+        console.warn("Failed to delete entry via API, using local fallback", error);
+        setEntries((prev) => {
+          const target = prev.find((entry) => entry.id === id);
+          if (!target) return prev;
+
+          setTrashEntries((trashPrev) => [
+            { ...target, trashedAt: new Date().toISOString() },
+            ...trashPrev,
+          ]);
+
+          return prev.filter((entry) => entry.id !== id);
+        });
       }
+    },
+    [getAuthToken]
+  );
 
-      setTrashEntries((trashPrev) => [
-        { ...target, trashedAt: new Date().toISOString() },
-        ...trashPrev,
-      ]);
+  // Restore entry from trash
+  const recoverEntry = useCallback(
+    async (id) => {
+      const token = await getAuthToken();
 
-      return prev.filter((entry) => entry.id !== id);
-    });
-  }, []);
+      try {
+        // Try to restore via API
+        if (token) {
+          const response = await fetch(`${API_BASE_URL}/diaries/${id}/restore`, {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
 
-  const recoverEntry = useCallback((id) => {
-    setTrashEntries((prev) => {
-      const target = prev.find((entry) => entry.id === id);
-      if (!target) {
-        return prev;
+          if (response.ok) {
+            const data = await response.json();
+            const restoredEntry = convertApiDiary(data.diary);
+            
+            setTrashEntries((prev) => prev.filter((entry) => entry.id !== id));
+            setEntries((prev) => [restoredEntry, ...prev]);
+            return;
+          }
+        }
+
+        // Fallback to local restore
+        setTrashEntries((prev) => {
+          const target = prev.find((entry) => entry.id === id);
+          if (!target) return prev;
+
+          const { trashedAt, ...rest } = target;
+          setEntries((entriesPrev) => [rest, ...entriesPrev]);
+
+          return prev.filter((entry) => entry.id !== id);
+        });
+      } catch (error) {
+        console.warn("Failed to restore entry via API, using local fallback", error);
+        setTrashEntries((prev) => {
+          const target = prev.find((entry) => entry.id === id);
+          if (!target) return prev;
+
+          const { trashedAt, ...rest } = target;
+          setEntries((entriesPrev) => [rest, ...entriesPrev]);
+
+          return prev.filter((entry) => entry.id !== id);
+        });
       }
+    },
+    [getAuthToken]
+  );
 
-      const { trashedAt, ...rest } = target;
+  // Permanently delete entry from trash
+  const deleteFromTrash = useCallback(
+    async (id) => {
+      const token = await getAuthToken();
 
-      setEntries((entriesPrev) => [rest, ...entriesPrev]);
+      try {
+        // Try to permanently delete via API
+        if (token) {
+          const response = await fetch(`${API_BASE_URL}/diaries/${id}/permanent`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
 
-      return prev.filter((entry) => entry.id !== id);
-    });
-  }, []);
+          if (response.ok) {
+            setTrashEntries((prev) => prev.filter((entry) => entry.id !== id));
+            return;
+          }
+        }
 
-  const deleteFromTrash = useCallback((id) => {
-    setTrashEntries((prev) => prev.filter((entry) => entry.id !== id));
-  }, []);
+        // Fallback to local delete
+        setTrashEntries((prev) => prev.filter((entry) => entry.id !== id));
+      } catch (error) {
+        console.warn("Failed to permanently delete entry via API, using local fallback", error);
+        setTrashEntries((prev) => prev.filter((entry) => entry.id !== id));
+      }
+    },
+    [getAuthToken]
+  );
 
   const emptyTrash = useCallback(() => {
     setTrashEntries([]);
@@ -350,6 +486,7 @@ export function DiaryProvider({ children }) {
       trashEntries,
       getEntry: (id) => entries.find((entry) => entry.id === id) ?? null,
       isReady,
+      isLoading,
     }),
     [
       entries,
@@ -361,7 +498,8 @@ export function DiaryProvider({ children }) {
       emptyTrash,
       trashEntries,
       isReady,
-    ],
+      isLoading,
+    ]
   );
 
   return <DiaryContext.Provider value={value}>{children}</DiaryContext.Provider>;

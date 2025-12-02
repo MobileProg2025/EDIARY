@@ -4,6 +4,7 @@ import "dotenv/config.js";
 
 import { connectDB } from "./lib/db.js";
 import authRoutes from "./routes/authRoutes.js";
+import diaryRoutes from "./routes/diaryRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,6 +19,7 @@ app.use((req, res, next) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/diaries", diaryRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server is running on PORT ${PORT}`);

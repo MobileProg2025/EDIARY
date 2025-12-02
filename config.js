@@ -1,8 +1,14 @@
 // API Configuration
-// For Physical Device with Expo Go: use your laptop's IP address
+// Instructions: Change the ACTIVE_IP_INDEX to switch between IPs
 
-export const API_BASE_URL = "http://10.0.0.34:3000/api";
+const API_CONFIGS = [
+  "http://192.168.1.8:3000/api",   // Index 0 - Ken IP
+  "http://10.0.0.34:3000/api",     // Index 1 - Dennis IP
+  "http://10.0.2.2:3000/api",      // Index 2 - Android Emulator
+  "http://localhost:3000/api",     // Index 3 - iOS Simulator
+];
 
-// Alternative configurations (uncomment as needed):
-// export const API_BASE_URL = "http://10.0.2.2:3000/api"; // Android Emulator
-// export const API_BASE_URL = "http://localhost:3000/api"; // iOS Simulator
+// Change this index to switch between IPs (0, 1, 2, or 3)
+const ACTIVE_IP_INDEX = 0;
+
+export const API_BASE_URL = API_CONFIGS[ACTIVE_IP_INDEX];
