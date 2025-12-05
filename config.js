@@ -2,7 +2,7 @@
 // Instructions: Change the ACTIVE_IP_INDEX to switch between IPs
 
 const API_CONFIGS = [
-  "http://192.168.1.8:3000/api",   // Index 0 - Ken IP
+  "http://192.168.1.3:3000/api",   // Index 0 - Ken IP
   "http://10.0.0.34:3000/api",     // Index 1 - Dennis IP
   "http://10.0.2.2:3000/api",      // Index 2 - Android Emulator
   "http://localhost:3000/api",     // Index 3 - iOS Simulator

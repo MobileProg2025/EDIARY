@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -90,7 +91,13 @@ export default function TrashScreen() {
                     <View style={styles.entryActions}>
                       <TouchableOpacity
                         style={styles.actionButton}
-                        onPress={() => recoverEntry(entry.id)}
+                        onPress={async () => {
+                          try {
+                            await recoverEntry(entry.id);
+                          } catch (error) {
+                            alert(error.message || "Could not recover entry. Check your internet connection.");
+                          }
+                        }}
                         activeOpacity={0.85}
                       >
                         <Ionicons name="arrow-undo" size={16} color="#3C3148" />
@@ -98,7 +105,30 @@ export default function TrashScreen() {
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[styles.actionButton, styles.actionButtonDanger]}
-                        onPress={() => deleteFromTrash(entry.id)}
+                        onPress={() => {
+                          Alert.alert(
+                            "Permanent Delete",
+                            "This action cannot be undone.",
+                            [
+                              {
+                                text: "Cancel",
+                                style: "cancel",
+                              },
+                              {
+                                text: "Delete",
+                                style: "destructive",
+                                onPress: async () => {
+                                  try {
+                                    await deleteFromTrash(entry.id);
+                                  } catch (error) {
+                                    alert(error.message || "Could not delete entry. Check your internet connection.");
+                                  }
+                                },
+                              },
+                            ],
+                            { cancelable: true }
+                          );
+                        }}
                         activeOpacity={0.85}
                       >
                         <Ionicons name="trash" size={16} color="#FFFFFF" />

@@ -242,6 +242,10 @@ export function DiaryProvider({ children }) {
     async (partialEntry) => {
       const token = await getAuthToken();
       
+      if (!token) {
+        throw new Error("You must be logged in to create diary entries");
+      }
+
       const entryData = {
         mood: partialEntry.mood || "calm",
         title: partialEntry.title?.trim() || "Untitled memory",
@@ -249,42 +253,23 @@ export function DiaryProvider({ children }) {
         imageUri: partialEntry.imageUri || null,
       };
 
-      try {
-        // Try to save to API
-        if (token) {
-          const response = await fetch(`${API_BASE_URL}/diaries`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(entryData),
-          });
+      const response = await fetch(`${API_BASE_URL}/diaries`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(entryData),
+      });
 
-          if (response.ok) {
-            const apiDiary = await response.json();
-            const newEntry = convertApiDiary(apiDiary);
-            setEntries((prev) => [newEntry, ...prev]);
-            return;
-          }
-        }
-
-        // Fallback to local storage
-        const localEntry = {
-          id: `entry-${Date.now()}`,
-          ...entryData,
-          createdAt: new Date().toISOString(),
-        };
-        setEntries((prev) => [localEntry, ...prev]);
-      } catch (error) {
-        console.warn("Failed to add entry via API, using local fallback", error);
-        const localEntry = {
-          id: `entry-${Date.now()}`,
-          ...entryData,
-          createdAt: new Date().toISOString(),
-        };
-        setEntries((prev) => [localEntry, ...prev]);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+       throw new Error(errorData.message || "Failed to save diary entry");
       }
+
+      const apiDiary = await response.json();
+      const newEntry = convertApiDiary(apiDiary);
+      setEntries((prev) => [newEntry, ...prev]);
     },
     [getAuthToken]
   );
@@ -294,38 +279,29 @@ export function DiaryProvider({ children }) {
     async (id, updates) => {
       const token = await getAuthToken();
 
-      try {
-        // Try to update in API
-        if (token) {
-          const response = await fetch(`${API_BASE_URL}/diaries/${id}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(updates),
-          });
-
-          if (response.ok) {
-            const apiDiary = await response.json();
-            const updatedEntry = convertApiDiary(apiDiary);
-            setEntries((prev) =>
-              prev.map((entry) => (entry.id === id ? updatedEntry : entry))
-            );
-            return;
-          }
-        }
-
-        // Fallback to local update
-        setEntries((prev) =>
-          prev.map((entry) => (entry.id === id ? { ...entry, ...updates } : entry))
-        );
-      } catch (error) {
-        console.warn("Failed to update entry via API, using local fallback", error);
-        setEntries((prev) =>
-          prev.map((entry) => (entry.id === id ? { ...entry, ...updates } : entry))
-        );
+      if (!token) {
+        throw new Error("You must be logged in to update diary entries");
       }
+
+      const response = await fetch(`${API_BASE_URL}/diaries/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to update diary entry");
+      }
+
+      const apiDiary = await response.json();
+      const updatedEntry = convertApiDiary(apiDiary);
+      setEntries((prev) =>
+        prev.map((entry) => (entry.id === id ? updatedEntry : entry))
+      );
     },
     [getAuthToken]
   );
@@ -335,55 +311,30 @@ export function DiaryProvider({ children }) {
     async (id) => {
       const token = await getAuthToken();
 
-      try {
-        // Try to soft delete via API
-        if (token) {
-          const response = await fetch(`${API_BASE_URL}/diaries/${id}`, {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            const trashedEntry = {
-              ...convertApiDiary(data.diary),
-              trashedAt: data.diary.deletedAt,
-            };
-            
-            setEntries((prev) => prev.filter((entry) => entry.id !== id));
-            setTrashEntries((prev) => [trashedEntry, ...prev]);
-            return;
-          }
-        }
-
-        // Fallback to local delete
-        setEntries((prev) => {
-          const target = prev.find((entry) => entry.id === id);
-          if (!target) return prev;
-
-          setTrashEntries((trashPrev) => [
-            { ...target, trashedAt: new Date().toISOString() },
-            ...trashPrev,
-          ]);
-
-          return prev.filter((entry) => entry.id !== id);
-        });
-      } catch (error) {
-        console.warn("Failed to delete entry via API, using local fallback", error);
-        setEntries((prev) => {
-          const target = prev.find((entry) => entry.id === id);
-          if (!target) return prev;
-
-          setTrashEntries((trashPrev) => [
-            { ...target, trashedAt: new Date().toISOString() },
-            ...trashPrev,
-          ]);
-
-          return prev.filter((entry) => entry.id !== id);
-        });
+      if (!token) {
+        throw new Error("You must be logged in to delete diary entries");
       }
+
+      const response = await fetch(`${API_BASE_URL}/diaries/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to delete diary entry");
+      }
+
+      const data = await response.json();
+      const trashedEntry = {
+        ...convertApiDiary(data.diary),
+        trashedAt: data.diary.deletedAt,
+      };
+      
+      setEntries((prev) => prev.filter((entry) => entry.id !== id));
+      setTrashEntries((prev) => [trashedEntry, ...prev]);
     },
     [getAuthToken]
   );
@@ -393,48 +344,34 @@ export function DiaryProvider({ children }) {
     async (id) => {
       const token = await getAuthToken();
 
-      try {
-        // Try to restore via API
-        if (token) {
-          const response = await fetch(`${API_BASE_URL}/diaries/${id}/restore`, {
-            method: "PUT",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            const restoredEntry = convertApiDiary(data.diary);
-            
-            setTrashEntries((prev) => prev.filter((entry) => entry.id !== id));
-            setEntries((prev) => [restoredEntry, ...prev]);
-            return;
-          }
-        }
-
-        // Fallback to local restore
-        setTrashEntries((prev) => {
-          const target = prev.find((entry) => entry.id === id);
-          if (!target) return prev;
-
-          const { trashedAt, ...rest } = target;
-          setEntries((entriesPrev) => [rest, ...entriesPrev]);
-
-          return prev.filter((entry) => entry.id !== id);
-        });
-      } catch (error) {
-        console.warn("Failed to restore entry via API, using local fallback", error);
-        setTrashEntries((prev) => {
-          const target = prev.find((entry) => entry.id === id);
-          if (!target) return prev;
-
-          const { trashedAt, ...rest } = target;
-          setEntries((entriesPrev) => [rest, ...entriesPrev]);
-
-          return prev.filter((entry) => entry.id !== id);
-        });
+      if (!token) {
+        throw new Error("You must be logged in to restore diary entries");
       }
+
+      const response = await fetch(`${API_BASE_URL}/diaries/${id}/restore`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to restore diary entry");
+      }
+
+      const data = await response.json();
+      const restoredEntry = convertApiDiary(data.diary);
+      
+      setTrashEntries((prev) => prev.filter((entry) => entry.id !== id));
+      
+      // Insert in correct chronological position based on createdAt
+      setEntries((prev) => {
+        const newEntries = [...prev, restoredEntry];
+        return newEntries.sort((a, b) => 
+          new Date(b.createdAt) - new Date(a.createdAt)
+        );
+      });
     },
     [getAuthToken]
   );
@@ -444,28 +381,23 @@ export function DiaryProvider({ children }) {
     async (id) => {
       const token = await getAuthToken();
 
-      try {
-        // Try to permanently delete via API
-        if (token) {
-          const response = await fetch(`${API_BASE_URL}/diaries/${id}/permanent`, {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-
-          if (response.ok) {
-            setTrashEntries((prev) => prev.filter((entry) => entry.id !== id));
-            return;
-          }
-        }
-
-        // Fallback to local delete
-        setTrashEntries((prev) => prev.filter((entry) => entry.id !== id));
-      } catch (error) {
-        console.warn("Failed to permanently delete entry via API, using local fallback", error);
-        setTrashEntries((prev) => prev.filter((entry) => entry.id !== id));
+      if (!token) {
+        throw new Error("You must be logged in to permanently delete diary entries");
       }
+
+      const response = await fetch(`${API_BASE_URL}/diaries/${id}/permanent`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to permanently delete diary entry");
+      }
+
+      setTrashEntries((prev) => prev.filter((entry) => entry.id !== id));
     },
     [getAuthToken]
   );

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Switch,
@@ -24,13 +25,31 @@ export default function SettingsScreen() {
       return;
     }
 
-    try {
-      setIsLoggingOut(true);
-      await logout();
-      router.replace("/login");
-    } finally {
-      setIsLoggingOut(false);
-    }
+    // Show confirmation dialog
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to log out?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setIsLoggingOut(true);
+              await logout();
+              router.replace("/login");
+            } finally {
+              setIsLoggingOut(false);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   return (

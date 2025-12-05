@@ -84,7 +84,7 @@ export default function PostScreen() {
     setImageUri((prev) => (prev ? null : null));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const trimmedTitle = title.trim();
     const trimmedContent = content.trim();
 
@@ -92,25 +92,41 @@ export default function PostScreen() {
       return;
     }
 
-    if (entryId && existingEntry) {
-      updateEntry(entryId, {
-        mood: selectedMood,
-        title: trimmedTitle || "Untitled memory",
-        content: trimmedContent,
-        imageUri,
-      });
-    } else {
-      addEntry({
-        mood: selectedMood,
-        title: trimmedTitle || "Untitled memory",
-        content: trimmedContent,
-        imageUri,
-      });
-    }
+    try {
+      if (entryId && existingEntry) {
+        await updateEntry(entryId, {
+          mood: selectedMood,
+          title: trimmedTitle || "Untitled memory",
+          content: trimmedContent,
+          imageUri,
+        });
+      } else {
+        await addEntry({
+          mood: selectedMood,
+          title: trimmedTitle || "Untitled memory",
+          content: trimmedContent,
+          imageUri,
+        });
+      }
 
-    resetForm();
-    router.setParams({ entryId: undefined });
-    router.replace("/diary");
+      // Only navigate away if save succeeded
+      resetForm();
+      router.setParams({ entryId: undefined });
+      router.replace("/diary");
+    } catch (error) {
+      // Show user-friendly error message
+      const errorMessage = error.message || "Something went wrong";
+      
+      // Customize message for common errors
+      let userMessage = errorMessage;
+      if (errorMessage.includes("logged in")) {
+        userMessage = "Please log in to save your diary";
+      } else if (errorMessage.includes("Failed")) {
+        userMessage = "Could not save. Check your internet connection.";
+      }
+      
+      alert(userMessage);
+    }
   };
 
   const screenTitle = entryId ? "Edit memory" : "Add memories";

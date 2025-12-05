@@ -107,18 +107,15 @@ router.put("/:id", async (req, res) => {
 // Soft delete diary entry (move to trash)
 router.delete("/:id", async (req, res) => {
     try {
-        const diary = await Diary.findOne({
-            _id: req.params.id,
-            user: req.user._id,
-            deletedAt: null  // Only delete if not already deleted
-        });
+        const diary = await Diary.findOneAndUpdate(
+            { _id: req.params.id, user: req.user._id, deletedAt: null },
+            { $set: { deletedAt: new Date() } },
+            { new: true }
+        );
 
         if (!diary) {
             return res.status(404).json({ message: "Diary entry not found" });
         }
-
-        diary.deletedAt = new Date();
-        await diary.save();
 
         res.status(200).json({ message: "Diary entry moved to trash", diary });
     } catch (error) {
@@ -130,18 +127,15 @@ router.delete("/:id", async (req, res) => {
 // Restore diary entry from trash
 router.put("/:id/restore", async (req, res) => {
     try {
-        const diary = await Diary.findOne({
-            _id: req.params.id,
-            user: req.user._id,
-            deletedAt: { $ne: null }  // Only restore if it's deleted
-        });
+        const diary = await Diary.findOneAndUpdate(
+            { _id: req.params.id, user: req.user._id, deletedAt: { $ne: null } },
+            { $set: { deletedAt: null } },
+            { new: true }
+        );
 
         if (!diary) {
             return res.status(404).json({ message: "Diary entry not found in trash" });
         }
-
-        diary.deletedAt = null;
-        await diary.save();
 
         res.status(200).json({ message: "Diary entry restored", diary });
     } catch (error) {

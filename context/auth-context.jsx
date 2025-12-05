@@ -154,16 +154,9 @@ export function AuthProvider({ children }) {
   );
 
   const getAuthToken = useCallback(async () => {
-    if (token) {
-      return token;
-    }
-    // Try to get from AsyncStorage if not in state
-    const storedToken = await AsyncStorage.getItem(TOKEN_KEY);
-    if (storedToken) {
-      setToken(storedToken);
-      return storedToken;
-    }
-    return null;
+    // Token in state is the source of truth after hydration
+    // Check AsyncStorage as fallback without modifying state (no side effects)
+    return token || await AsyncStorage.getItem(TOKEN_KEY);
   }, [token]);
 
   const value = useMemo(

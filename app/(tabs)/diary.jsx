@@ -64,15 +64,32 @@ export default function DiaryScreen() {
     router.push({ pathname: "/post", params: { entryId: entry.id } });
   };
 
-  const handleDelete = (entry) => {
-    deleteEntry(entry.id);
+  const handleDelete = async (entry) => {
+    try {
+      await deleteEntry(entry.id);
+    } catch (error) {
+      const errorMessage = error.message || "Something went wrong";
+      let userMessage = errorMessage;
+      
+      if (errorMessage.includes("logged in")) {
+        userMessage = "Please log in to delete entries";
+      } else if (errorMessage.includes("Failed")) {
+        userMessage = "Could not delete. Check your internet connection.";
+      }
+      
+      alert(userMessage);
+    }
   };
 
   const renderEntry = ({ item }) => {
     const meta = MOOD_META[item.mood] ?? FALLBACK_META;
 
     return (
-      <View style={styles.entryCard}>
+      <TouchableOpacity
+        style={styles.entryCard}
+        onPress={() => router.push({ pathname: "/diary-view", params: { entryId: item.id } })}
+        activeOpacity={0.9}
+      >
         <MaterialCommunityIcons
           name={meta.icon}
           size={28}
@@ -93,18 +110,24 @@ export default function DiaryScreen() {
         <View style={styles.entryActions}>
           <TouchableOpacity
             style={styles.entryActionButton}
-            onPress={() => handleEdit(item)}
+            onPress={(e) => {
+              e.stopPropagation();
+              handleEdit(item);
+            }}
           >
             <Ionicons name="create-outline" size={18} color="#3C3148" />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.entryActionButton}
-            onPress={() => handleDelete(item)}
+            onPress={(e) => {
+              e.stopPropagation();
+              handleDelete(item);
+            }}
           >
             <Ionicons name="trash-outline" size={18} color="#F37A74" />
           </TouchableOpacity>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
