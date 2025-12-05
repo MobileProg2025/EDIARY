@@ -196,50 +196,48 @@ export default function TabsLayout() {
   }
 
   return (
-    <DiaryProvider>
-      <Tabs
-        screenOptions={{
-          headerShown: false,
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+      }}
+      tabBar={(props) => <CustomTabBar {...props} />}
+    >
+      <Tabs.Screen
+        name="home"
+        options={{
+          tabBarLabel: TAB_META.home.label,
+          tabBarIcon: iconFor(TAB_META.home.icon),
         }}
-        tabBar={(props) => <CustomTabBar {...props} />}
-      >
-        <Tabs.Screen
-          name="home"
-          options={{
-            tabBarLabel: TAB_META.home.label,
-            tabBarIcon: iconFor(TAB_META.home.icon),
-          }}
-        />
-        <Tabs.Screen
-          name="diary"
-          options={{
-            tabBarLabel: TAB_META.diary.label,
-            tabBarIcon: iconFor(TAB_META.diary.icon),
-          }}
-        />
-        <Tabs.Screen
-          name="post"
-          options={{
-            tabBarLabel: "Post",
-            tabBarIcon: iconFor("add"),
-          }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            tabBarLabel: TAB_META.profile.label,
-            tabBarIcon: iconFor(TAB_META.profile.icon),
-          }}
-        />
-        <Tabs.Screen
-          name="settings"
-          options={{
-            tabBarLabel: TAB_META.settings.label,
-            tabBarIcon: iconFor(TAB_META.settings.icon),
-          }}
-        />
-      </Tabs>
-    </DiaryProvider>
+      />
+      <Tabs.Screen
+        name="diary"
+        options={{
+          tabBarLabel: TAB_META.diary.label,
+          tabBarIcon: iconFor(TAB_META.diary.icon),
+        }}
+      />
+      <Tabs.Screen
+        name="post"
+        options={{
+          tabBarLabel: "Post",
+          tabBarIcon: iconFor("add"),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          tabBarLabel: TAB_META.profile.label,
+          tabBarIcon: iconFor(TAB_META.profile.icon),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          tabBarLabel: TAB_META.settings.label,
+          tabBarIcon: iconFor(TAB_META.settings.icon),
+        }}
+      />
+    </Tabs>
   );
 }
 

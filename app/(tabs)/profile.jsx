@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useMemo } from "react";
 import { useDiary } from "../../context/diary-context";
@@ -142,10 +142,12 @@ export default function ProfileScreen() {
       >
         <Text style={styles.title}>Profile</Text>
 
-        <View style={styles.avatar}>
-          <View style={styles.avatarHead} />
-          <View style={styles.avatarBody} />
-        </View>
+        <Image 
+          source={{ 
+            uri: `https://api.dicebear.com/7.x/fun-emoji/png?seed=${encodeURIComponent(user?.email || 'default')}&backgroundColor=b6e3f4,c0aede,d1d4f9&size=132`
+          }}
+          style={styles.avatar}
+        />
 
         {displayUsername ? <Text style={styles.username}>@{displayUsername}</Text> : null}
         {displayName && displayName !== "Your Profile" && displayName !== user?.email ? (
@@ -206,28 +208,11 @@ const styles = StyleSheet.create({
   avatar: {
     width: 132,
     height: 132,
-    borderRadius: 100,
+    borderRadius: 66,
     borderWidth: 6,
     borderColor: "#F0E8E0",
     marginTop: 8,
     backgroundColor: "#E0E0E0",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    overflow: "hidden",
-    paddingTop: 26,
-  },
-  avatarHead: {
-    width: 60,
-    height: 60,
-    borderRadius: 100,
-    backgroundColor: "#B4B4B4",
-  },
-  avatarBody: {
-    marginTop: 14,
-    width: 104,
-    height: 56,
-    backgroundColor: "#C2C2C2",
-    borderRadius: 100,
   },
   username: {
     fontSize: 20,

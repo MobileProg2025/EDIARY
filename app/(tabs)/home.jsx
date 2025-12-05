@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useDiary } from "../../context/diary-context";
 import { useAuth } from "../../context/auth-context";
 
@@ -75,6 +76,7 @@ const formatEntryTimestamp = (value) => {
 };
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { entries } = useDiary();
   const { user } = useAuth();
   const [visibleMonth, setVisibleMonth] = useState(
@@ -214,7 +216,12 @@ export default function HomeScreen() {
   const renderEntrySnippet = (entry) => {
     const meta = MOOD_META[entry.mood] ?? FALLBACK_META;
     return (
-      <View key={entry.id} style={styles.entrySnippet}>
+      <TouchableOpacity
+        key={entry.id}
+        style={styles.entrySnippet}
+        onPress={() => router.push({ pathname: "/diary-view", params: { entryId: entry.id } })}
+        activeOpacity={0.7}
+      >
         <View style={styles.snippetHeader}>
           <MaterialCommunityIcons
             name={meta.icon}
@@ -230,7 +237,7 @@ export default function HomeScreen() {
           </View>
         </View>
         <Text style={styles.snippetTitle}>{entry.title}</Text>
-      </View>
+      </TouchableOpacity>
     );
   };
 
