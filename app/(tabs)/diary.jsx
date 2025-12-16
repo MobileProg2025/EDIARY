@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import {
   FlatList,
   Image,
@@ -58,6 +58,23 @@ export default function DiaryScreen() {
   const [isFilterVisible, setFilterVisible] = useState(false);
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(null);
+
+  const handleSelectYear = useCallback((year) => {
+    setSelectedYear((prev) => (prev === year ? null : year));
+  }, []);
+
+  const handleSelectMonth = useCallback((month) => {
+    setSelectedMonth((prev) => (prev === month ? null : month));
+  }, []);
+
+  const handleCloseFilter = useCallback(() => {
+    setFilterVisible(false);
+  }, []);
+
+  const handleResetFilters = useCallback(() => {
+    setSelectedYear(null);
+    setSelectedMonth(null);
+  }, []);
 
   const availableYears = useMemo(() => {
     const years = new Set(
@@ -293,7 +310,7 @@ const FilterModal = ({
                   styles.yearChip,
                   selectedYear === year && styles.yearChipActive,
                 ]}
-                onPress={() => onSelectYear(year === selectedYear ? null : year)}
+                onPress={() => onSelectYear(year)}
               >
                 <Text
                   style={[
@@ -318,9 +335,7 @@ const FilterModal = ({
                   styles.monthChip,
                   selectedMonth === index && styles.monthChipActive,
                 ]}
-                onPress={() =>
-                  onSelectMonth(selectedMonth === index ? null : index)
-                }
+                onPress={() => onSelectMonth(index)}
               >
                 <Text
                   style={[
@@ -369,16 +384,13 @@ const FilterModal = ({
         />
         <FilterModal
           visible={isFilterVisible}
-          onClose={() => setFilterVisible(false)}
+          onClose={handleCloseFilter}
           selectedYear={selectedYear}
-          onSelectYear={setSelectedYear}
+          onSelectYear={handleSelectYear}
           selectedMonth={selectedMonth}
-          onSelectMonth={setSelectedMonth}
+          onSelectMonth={handleSelectMonth}
           availableYears={availableYears}
-          onReset={() => {
-            setSelectedYear(null);
-            setSelectedMonth(null);
-          }}
+          onReset={handleResetFilters}
         />
       </View>
     </SafeAreaView>
