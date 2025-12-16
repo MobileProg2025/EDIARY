@@ -26,6 +26,16 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
+
+    firstName: {
+        type: String,
+        default: "",
+    },
+
+    lastName: {
+        type: String,
+        default: "",
+    },
 })
 
 userSchema.pre("save", async function () {

@@ -136,21 +136,29 @@ export function AuthProvider({ children }) {
         throw new Error("No active user to update.");
       }
 
-      // For now, update locally until we have a backend update profile endpoint
-      const updatedUser = {
-        ...user,
-        username: updates.username ?? user.username,
-        email: updates.email ?? user.email,
-        firstName: updates.firstName ?? user.firstName,
-        lastName: updates.lastName ?? user.lastName,
-      };
+      const activeToken = token || (await AsyncStorage.getItem(TOKEN_KEY));
 
-      await AsyncStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
-      setUser(updatedUser);
+      const response = await fetch(`${API_BASE_URL}/auth/update-profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${activeToken}`,
+        },
+        body: JSON.stringify(updates),
+      });
 
-      return updatedUser;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to update profile.");
+      }
+
+      await AsyncStorage.setItem(USER_KEY, JSON.stringify(data.user));
+      setUser(data.user);
+
+      return data.user;
     },
-    [user]
+    [user, token]
   );
 
   const getAuthToken = useCallback(async () => {
