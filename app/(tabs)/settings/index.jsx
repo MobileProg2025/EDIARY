@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     paddingTop: 30,
     paddingBottom: 64,
     paddingHorizontal: 28,
-    gap: 13,
+    gap: 18,
     alignItems: "stretch",
   },
   title: {
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     borderWidth: 1,
     borderColor: "#E6DAD1",
-    gap: 10,
+    gap: 15,
     shadowColor: "#000000",
     shadowOpacity: 0.05,
     shadowRadius: 12,

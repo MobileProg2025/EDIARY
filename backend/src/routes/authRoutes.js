@@ -1,6 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -47,6 +48,8 @@ router.post("/register", async (req, res) => {
                 _id: user._id,
                 email: user.email,
                 username: user.username,
+                firstName: user.firstName,
+                lastName: user.lastName,
                 profileImage: user.profileImage
             },
         });
@@ -80,12 +83,49 @@ router.post("/login", async (req, res) => {
                 _id: user._id,
                 email: user.email,
                 username: user.username,
+                firstName: user.firstName,
+                lastName: user.lastName,
                 profileImage: user.profileImage
             },
         });
 
     } catch (error) {
         console.log("Error in login route", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+router.put("/update-profile", authMiddleware, async (req, res) => {
+    try {
+        const { firstName, lastName, email, username } = req.body;
+        const userId = req.user._id;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        if (firstName !== undefined) user.firstName = firstName;
+        if (lastName !== undefined) user.lastName = lastName;
+        if (email !== undefined) user.email = email;
+        if (username !== undefined) user.username = username;
+
+        await user.save();
+
+        res.status(200).json({
+            message: "Profile updated successfully",
+            user: {
+                _id: user._id,
+                email: user.email,
+                username: user.username,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                profileImage: user.profileImage
+            }
+        });
+
+    } catch (error) {
+        console.log("Error in update profile route", error);
         return res.status(500).json({ message: "Internal server error" });
     }
 });
