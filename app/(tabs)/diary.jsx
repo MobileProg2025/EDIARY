@@ -49,6 +49,7 @@ export default function DiaryScreen() {
   const router = useRouter();
   const { entries, deleteEntry } = useDiary();
   const [query, setQuery] = useState("");
+  const [isGridMode, setGridMode] = useState(false);
   const [isFilterVisible, setFilterVisible] = useState(false);
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(null);
@@ -101,6 +102,33 @@ export default function DiaryScreen() {
   const renderEntry = ({ item }) => {
     const meta = MOOD_META[item.mood] ?? FALLBACK_META;
 
+    if (isGridMode) {
+      return (
+        <TouchableOpacity
+          style={styles.gridEntryCard}
+          onPress={() => router.push({ pathname: "/diary-view", params: { entryId: item.id } })}
+          activeOpacity={0.9}
+        >
+          <View style={styles.gridHeader}>
+            <MaterialCommunityIcons
+              name={meta.icon}
+              size={24}
+              color="#353535ff"
+            />
+             <View style={[styles.entryTag, { backgroundColor: meta.color, paddingHorizontal: 8, paddingVertical: 2 }]}>
+              <Text style={[styles.entryTagText, { fontSize: 10 }]}>{formatTimestamp(item.createdAt).split(',')[0]}</Text>
+            </View>
+          </View>
+          <Text style={styles.gridEntryTitle} numberOfLines={2}>{item.title}</Text>
+           {item.content ? (
+            <Text style={styles.gridEntryExcerpt} numberOfLines={3}>
+              {item.content}
+            </Text>
+          ) : null}
+        </TouchableOpacity>
+      );
+    }
+
     return (
       <TouchableOpacity
         style={styles.entryCard}
@@ -132,7 +160,7 @@ export default function DiaryScreen() {
               handleEdit(item);
             }}
           >
-            <Ionicons name="create-outline" size={18} color="#3C3148" />
+            <Ionicons name="create-outline" size={18} color="#137bfaff" />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.entryActionButton}
@@ -170,6 +198,16 @@ export default function DiaryScreen() {
             onChangeText={setQuery}
           />
         </View>
+        <TouchableOpacity
+          style={[styles.filterButton, isGridMode && styles.filterActive]}
+          onPress={() => setGridMode(!isGridMode)}
+        >
+          <Ionicons
+            name={isGridMode ? "list-outline" : "grid-outline"}
+            size={20}
+            color={isGridMode ? "#FFFFFF" : "#3C3148"}
+          />
+        </TouchableOpacity>
         <TouchableOpacity
           style={[
             styles.filterButton,
@@ -304,11 +342,14 @@ export default function DiaryScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <FlatList
+          key={isGridMode ? "grid" : "list"}
           data={filteredEntries}
           keyExtractor={(item) => item.id}
           ListHeaderComponent={listHeader}
           renderItem={renderEntry}
           contentContainerStyle={styles.listContent}
+          numColumns={isGridMode ? 2 : 1}
+          columnWrapperStyle={isGridMode ? styles.gridColumnWrapper : null}
           ListEmptyComponent={
             <View style={styles.emptyCard}>
               <Text style={styles.emptyText}>No diaries found</Text>
@@ -360,13 +401,13 @@ const styles = StyleSheet.create({
   },
   searchRow: {
     flexDirection: "row",
-    gap: 12,
+    gap: 6,
   },
   searchField: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 8,
     backgroundColor: LIST_BG,
     borderRadius: 12,
     borderWidth: 1,
@@ -452,6 +493,33 @@ const styles = StyleSheet.create({
   },
   entryActionButton: {
     padding: 6,
+  },
+  gridColumnWrapper: {
+    gap: 12,
+  },
+  gridEntryCard: {
+    flex: 1,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    backgroundColor: LIST_BG,
+    padding: 12,
+    gap: 8,
+    maxWidth: "49%",
+  },
+  gridHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  gridEntryTitle: {
+    fontSize: 14,
+    color: "#3C3148",
+    fontWeight: "600",
+  },
+  gridEntryExcerpt: {
+    fontSize: 12,
+    color: "#7E7874",
   },
   modalOverlay: {
     flex: 1,
