@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import {
   FlatList,
   Image,
@@ -33,6 +33,11 @@ const FALLBACK_META = {
   icon: "emoticon-outline",
 };
 
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
 const formatTimestamp = (value) => {
   const date = value ? new Date(value) : new Date();
   return new Intl.DateTimeFormat("en-US", {
@@ -54,6 +59,23 @@ export default function DiaryScreen() {
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(null);
 
+  const handleSelectYear = useCallback((year) => {
+    setSelectedYear((prev) => (prev === year ? null : year));
+  }, []);
+
+  const handleSelectMonth = useCallback((month) => {
+    setSelectedMonth((prev) => (prev === month ? null : month));
+  }, []);
+
+  const handleCloseFilter = useCallback(() => {
+    setFilterVisible(false);
+  }, []);
+
+  const handleResetFilters = useCallback(() => {
+    setSelectedYear(null);
+    setSelectedMonth(null);
+  }, []);
+
   const availableYears = useMemo(() => {
     const years = new Set(
       entries.map((e) => new Date(e.createdAt).getFullYear())
@@ -62,13 +84,15 @@ export default function DiaryScreen() {
   }, [entries]);
 
   const filteredEntries = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    
     return entries.filter((entry) => {
       const entryDate = new Date(entry.createdAt);
       const matchesQuery =
-        !query.trim() ||
+        !normalizedQuery ||
         `${entry.title} ${entry.content}`
           .toLowerCase()
-          .includes(query.trim().toLowerCase());
+          .includes(normalizedQuery);
 
       const matchesYear = !selectedYear || entryDate.getFullYear() === selectedYear;
       const matchesMonth =
@@ -225,118 +249,119 @@ export default function DiaryScreen() {
     </View>
   );
 
-  const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
 
-  const renderFilterModal = () => (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={isFilterVisible}
-      onRequestClose={() => setFilterVisible(false)}
+
+const FilterModal = ({
+  visible,
+  onClose,
+  selectedYear,
+  onSelectYear,
+  selectedMonth,
+  onSelectMonth,
+  availableYears,
+  onReset,
+}) => (
+  <Modal
+    animationType="fade"
+    transparent={true}
+    visible={visible}
+    onRequestClose={onClose}
+  >
+    <TouchableOpacity
+      style={styles.modalOverlay}
+      activeOpacity={1}
+      onPress={onClose}
     >
-      <TouchableOpacity
-        style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={() => setFilterVisible(false)}
-      >
-        <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Filter Memories</Text>
-            <TouchableOpacity onPress={() => setFilterVisible(false)}>
-              <Ionicons name="close" size={24} color="#3C3148" />
-            </TouchableOpacity>
-          </View>
+      <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
+        <View style={styles.modalHeader}>
+          <Text style={styles.modalTitle}>Filter Memories</Text>
+          <TouchableOpacity onPress={onClose}>
+            <Ionicons name="close" size={24} color="#3C3148" />
+          </TouchableOpacity>
+        </View>
 
-          <View style={styles.filterSection}>
-            <Text style={styles.filterLabel}>Year</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.yearScroll}>
-               <TouchableOpacity
-                  style={[
-                    styles.yearChip,
-                    selectedYear === null && styles.yearChipActive,
-                  ]}
-                  onPress={() => setSelectedYear(null)}
-                >
-                  <Text
-                    style={[
-                      styles.yearChipText,
-                      selectedYear === null && styles.yearChipTextActive,
-                    ]}
-                  >
-                    All
-                  </Text>
-                </TouchableOpacity>
-              {availableYears.map((year) => (
-                <TouchableOpacity
-                  key={year}
-                  style={[
-                    styles.yearChip,
-                    selectedYear === year && styles.yearChipActive,
-                  ]}
-                  onPress={() => setSelectedYear(year === selectedYear ? null : year)}
-                >
-                  <Text
-                    style={[
-                      styles.yearChipText,
-                      selectedYear === year && styles.yearChipTextActive,
-                    ]}
-                  >
-                    {year}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-
-          <View style={styles.filterSection}>
-            <Text style={styles.filterLabel}>Month</Text>
-            <View style={styles.monthGrid}>
-              {months.map((month, index) => (
-                <TouchableOpacity
-                  key={month}
-                  style={[
-                    styles.monthChip,
-                    selectedMonth === index && styles.monthChipActive,
-                  ]}
-                  onPress={() => setSelectedMonth(selectedMonth === index ? null : index)}
-                >
-                  <Text
-                    style={[
-                      styles.monthChipText,
-                      selectedMonth === index && styles.monthChipTextActive,
-                    ]}
-                  >
-                    {month.slice(0, 3)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          <View style={styles.modalActions}>
+        <View style={styles.filterSection}>
+          <Text style={styles.filterLabel}>Year</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.yearScroll}
+          >
             <TouchableOpacity
-              style={styles.resetButton}
-              onPress={() => {
-                setSelectedYear(null);
-                setSelectedMonth(null);
-              }}
+              style={[
+                styles.yearChip,
+                selectedYear === null && styles.yearChipActive,
+              ]}
+              onPress={() => onSelectYear(null)}
             >
-              <Text style={styles.resetButtonText}>Reset</Text>
+              <Text
+                style={[
+                  styles.yearChipText,
+                  selectedYear === null && styles.yearChipTextActive,
+                ]}
+              >
+                All
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.applyButton}
-              onPress={() => setFilterVisible(false)}
-            >
-              <Text style={styles.applyButtonText}>Apply Filter</Text>
-            </TouchableOpacity>
+            {availableYears.map((year) => (
+              <TouchableOpacity
+                key={year}
+                style={[
+                  styles.yearChip,
+                  selectedYear === year && styles.yearChipActive,
+                ]}
+                onPress={() => onSelectYear(year)}
+              >
+                <Text
+                  style={[
+                    styles.yearChipText,
+                    selectedYear === year && styles.yearChipTextActive,
+                  ]}
+                >
+                  {year}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        <View style={styles.filterSection}>
+          <Text style={styles.filterLabel}>Month</Text>
+          <View style={styles.monthGrid}>
+            {MONTHS.map((month, index) => (
+              <TouchableOpacity
+                key={month}
+                style={[
+                  styles.monthChip,
+                  selectedMonth === index && styles.monthChipActive,
+                ]}
+                onPress={() => onSelectMonth(index)}
+              >
+                <Text
+                  style={[
+                    styles.monthChipText,
+                    selectedMonth === index && styles.monthChipTextActive,
+                  ]}
+                >
+                  {month.slice(0, 3)}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
-        </TouchableOpacity>
+        </View>
+
+        <View style={styles.modalActions}>
+          <TouchableOpacity style={styles.resetButton} onPress={onReset}>
+            <Text style={styles.resetButtonText}>Reset</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.applyButton} onPress={onClose}>
+            <Text style={styles.applyButtonText}>Apply Filter</Text>
+          </TouchableOpacity>
+        </View>
       </TouchableOpacity>
-    </Modal>
-  );
+    </TouchableOpacity>
+  </Modal>
+);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -357,7 +382,16 @@ export default function DiaryScreen() {
           }
           showsVerticalScrollIndicator={false}
         />
-        {renderFilterModal()}
+        <FilterModal
+          visible={isFilterVisible}
+          onClose={handleCloseFilter}
+          selectedYear={selectedYear}
+          onSelectYear={handleSelectYear}
+          selectedMonth={selectedMonth}
+          onSelectMonth={handleSelectMonth}
+          availableYears={availableYears}
+          onReset={handleResetFilters}
+        />
       </View>
     </SafeAreaView>
   );
