@@ -42,9 +42,14 @@ export default function TrashScreen() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [selectedEntryId, setSelectedEntryId] = useState(null);
 
-  const confirmEmptyTrash = async () => {
-    await emptyTrash();
+  const confirmEmptyTrash = () => {
+    emptyTrash();
     setEmptyModalVisible(false);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setDeleteModalVisible(false);
+    setSelectedEntryId(null);
   };
 
   const handleDeletePress = (id) => {
@@ -62,8 +67,7 @@ export default function TrashScreen() {
             "Could not delete entry. Check your internet connection."
         );
       } finally {
-        setDeleteModalVisible(false);
-        setSelectedEntryId(null);
+        handleCloseDeleteModal();
       }
     }
   };
@@ -173,10 +177,7 @@ export default function TrashScreen() {
         message="Are you sure you want to permanently delete this entry? This action cannot be undone."
         confirmText="Delete"
         isDelete={true}
-        onCancel={() => {
-          setDeleteModalVisible(false);
-          setSelectedEntryId(null);
-        }}
+        onCancel={handleCloseDeleteModal}
         onConfirm={confirmDeleteEntry}
       />
     </SafeAreaView>
