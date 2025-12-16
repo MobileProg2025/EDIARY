@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   Image,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -63,102 +65,108 @@ export default function Login() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.logoContainer}>
-          <Image
-            source={require("../assets/images/e-diarylogo2.png")}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
-
-        <View style={styles.form}>
-          <Text style={styles.label}>Username</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="person" size={15} color="#161616" />
-            <TextInput
-              style={styles.input}
-              placeholder="username"
-              placeholderTextColor="#9B9B9B"
-              value={username}
-              onChangeText={handleUsernameChange}
-              keyboardType="default"
-              autoCapitalize="none"
+        <ScrollView
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.logoContainer}>
+            <Image
+              source={require("../assets/images/e-diarylogo2.png")}
+              style={styles.logo}
+              resizeMode="contain"
             />
           </View>
 
-          <Text style={[styles.label, styles.labelSpacing]}>Password</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="lock-closed" size={15} color="#161616" />
-            <TextInput
-              style={styles.input}
-              placeholder="************"
-              placeholderTextColor="#9B9B9B"
-              value={password}
-              onChangeText={handlePasswordChange}
-              secureTextEntry={!showPassword}
-            />
-            <TouchableOpacity
-              onPress={() => setShowPassword((prev) => !prev)}
-              style={styles.trailingIcon}
-            >
-              <Ionicons
-                name={showPassword ? "eye-off" : "eye"}
-                size={20}
-                color="#161616"
+          <View style={styles.form}>
+            <Text style={styles.label}>Username</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="person" size={15} color="#161616" />
+              <TextInput
+                style={styles.input}
+                placeholder="username"
+                placeholderTextColor="#9B9B9B"
+                value={username}
+                onChangeText={handleUsernameChange}
+                keyboardType="default"
+                autoCapitalize="none"
               />
+            </View>
+
+            <Text style={[styles.label, styles.labelSpacing]}>Password</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="lock-closed" size={15} color="#161616" />
+              <TextInput
+                style={styles.input}
+                placeholder="************"
+                placeholderTextColor="#9B9B9B"
+                value={password}
+                onChangeText={handlePasswordChange}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword((prev) => !prev)}
+                style={styles.trailingIcon}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off" : "eye"}
+                  size={20}
+                  color="#161616"
+                />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity style={styles.forgotLink}>
+              <Text style={styles.forgotText}>Forgot Password?</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.primaryButton, styles.loginButton]}
+              onPress={handleLogin}
+              disabled={isSubmitting}
+            >
+              <Text style={styles.primaryButtonText}>
+                {isSubmitting ? "Logging in..." : "Log in"}
+              </Text>
+            </TouchableOpacity>
+
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+            <View style={styles.bottomPrompt}>
+              <Text style={styles.promptText}>Don&apos;t have an account? </Text>
+              <Link href="/signup" style={styles.promptLink}>
+                Sign Up
+              </Link>
+            </View>
+
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>or</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <TouchableOpacity style={styles.socialButton}>
+              <Image
+              source = {require("../assets/images/google.png")}
+              style={styles.socialLogo}
+              />
+              <Text style={styles.socialText}>Continue with Google</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.socialButton}>
+              <Image
+              source = {require("../assets/images/facebook.png")}
+              style={styles.socialLogo}
+              />
+              <Text style={styles.socialText}>Continue with Facebook</Text>
             </TouchableOpacity>
           </View>
-
-          <TouchableOpacity style={styles.forgotLink}>
-            <Text style={styles.forgotText}>Forgot Password?</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.primaryButton, styles.loginButton]}
-            onPress={handleLogin}
-            disabled={isSubmitting}
-          >
-            <Text style={styles.primaryButtonText}>
-              {isSubmitting ? "Logging in..." : "Log in"}
-            </Text>
-          </TouchableOpacity>
-
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-          <View style={styles.bottomPrompt}>
-            <Text style={styles.promptText}>Don&apos;t have an account? </Text>
-            <Link href="/signup" style={styles.promptLink}>
-              Sign Up
-            </Link>
-          </View>
-
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <TouchableOpacity style={styles.socialButton}>
-            <Image
-            source = {require("../assets/images/google.png")}
-            style={styles.socialLogo}
-            />
-            <Text style={styles.socialText}>Continue with Google</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.socialButton}>
-            <Image
-            source = {require("../assets/images/facebook.png")}
-            style={styles.socialLogo}
-            />
-            <Text style={styles.socialText}>Continue with Facebook</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

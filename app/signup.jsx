@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   Image,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -104,122 +106,128 @@ export default function Signup() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.logoContainer}>
-          <Image
-            source={require("../assets/images/e-diarylogo2.png")}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
-
-        <View style={styles.form}>
-          <Text style={[styles.label, styles.sectionSpacing]}>
-            Enter your username
-          </Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="person" size={15} color="#161616" />
-            <TextInput
-              style={styles.input}
-              placeholder="username"
-              placeholderTextColor="#9B9B9B"
-              keyboardType="default"
-              autoCapitalize="none"
-              value={username}
-              onChangeText={handleUsernameChange}
+        <ScrollView
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.logoContainer}>
+            <Image
+              source={require("../assets/images/e-diarylogo2.png")}
+              style={styles.logo}
+              resizeMode="contain"
             />
           </View>
 
-          <Text style={[styles.label, styles.sectionSpacing]}>
-            Enter email address
-          </Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="person" size={15} color="#161616" />
-            <TextInput
-              style={styles.input}
-              placeholder="abc12@gmail.com"
-              placeholderTextColor="#9B9B9B"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={handleEmailChange}
-            />
-          </View>
-
-          <Text style={[styles.label, styles.sectionSpacing]}>
-            Enter password
-          </Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="lock-closed" size={15} color="#161616" />
-            <TextInput
-              style={styles.input}
-              placeholder="************"
-              placeholderTextColor="#9B9B9B"
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={handlePasswordChange}
-            />
-            <TouchableOpacity
-              onPress={() => setShowPassword((prev) => !prev)}
-              style={styles.trailingIcon}
-            >
-              <Ionicons
-                name={showPassword ? "eye-off" : "eye"}
-                size={20}
-                color="#161616"
-              />
-            </TouchableOpacity>
-          </View>
-
-          <Text style={[styles.label, styles.sectionSpacing]}>
-            Re - enter password
-          </Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="lock-closed" size={15} color="#161616" />
-            <TextInput
-              style={styles.input}
-              placeholder="************"
-              placeholderTextColor="#9B9B9B"
-              secureTextEntry={!showConfirmPassword}
-              value={confirmPassword}
-              onChangeText={handleConfirmPasswordChange}
-            />
-            <TouchableOpacity
-              onPress={() => setShowConfirmPassword((prev) => !prev)}
-              style={styles.trailingIcon}
-            >
-              <Ionicons
-                name={showConfirmPassword ? "eye-off" : "eye"}
-                size={20}
-                color="#161616"
-              />
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.primaryButton, styles.signupButton]}
-            onPress={handleSignup}
-            activeOpacity={0.85}
-            disabled={isSubmitting}
-          >
-            <Text style={styles.primaryButtonText}>
-              {isSubmitting ? "Creating account..." : "Sign Up"}
+          <View style={styles.form}>
+            <Text style={[styles.label, styles.sectionSpacing]}>
+              Enter your username
             </Text>
-          </TouchableOpacity>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="person" size={15} color="#161616" />
+              <TextInput
+                style={styles.input}
+                placeholder="username"
+                placeholderTextColor="#9B9B9B"
+                keyboardType="default"
+                autoCapitalize="none"
+                value={username}
+                onChangeText={handleUsernameChange}
+              />
+            </View>
 
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            <Text style={[styles.label, styles.sectionSpacing]}>
+              Enter email address
+            </Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="person" size={15} color="#161616" />
+              <TextInput
+                style={styles.input}
+                placeholder="abc12@gmail.com"
+                placeholderTextColor="#9B9B9B"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={handleEmailChange}
+              />
+            </View>
 
-          <View style={styles.bottomPrompt}>
-            <Text style={styles.promptText}>Already have an account? </Text>
-            <Link href="/login" style={styles.promptLink}>
-              Log In
-            </Link>
+            <Text style={[styles.label, styles.sectionSpacing]}>
+              Enter password
+            </Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="lock-closed" size={15} color="#161616" />
+              <TextInput
+                style={styles.input}
+                placeholder="************"
+                placeholderTextColor="#9B9B9B"
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={handlePasswordChange}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword((prev) => !prev)}
+                style={styles.trailingIcon}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off" : "eye"}
+                  size={20}
+                  color="#161616"
+                />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[styles.label, styles.sectionSpacing]}>
+              Re - enter password
+            </Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="lock-closed" size={15} color="#161616" />
+              <TextInput
+                style={styles.input}
+                placeholder="************"
+                placeholderTextColor="#9B9B9B"
+                secureTextEntry={!showConfirmPassword}
+                value={confirmPassword}
+                onChangeText={handleConfirmPasswordChange}
+              />
+              <TouchableOpacity
+                onPress={() => setShowConfirmPassword((prev) => !prev)}
+                style={styles.trailingIcon}
+              >
+                <Ionicons
+                  name={showConfirmPassword ? "eye-off" : "eye"}
+                  size={20}
+                  color="#161616"
+                />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.primaryButton, styles.signupButton]}
+              onPress={handleSignup}
+              activeOpacity={0.85}
+              disabled={isSubmitting}
+            >
+              <Text style={styles.primaryButtonText}>
+                {isSubmitting ? "Creating account..." : "Sign Up"}
+              </Text>
+            </TouchableOpacity>
+
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+            <View style={styles.bottomPrompt}>
+              <Text style={styles.promptText}>Already have an account? </Text>
+              <Link href="/login" style={styles.promptLink}>
+                Log In
+              </Link>
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
