@@ -7,6 +7,8 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Modal,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -47,18 +49,33 @@ export default function DiaryScreen() {
   const router = useRouter();
   const { entries, deleteEntry } = useDiary();
   const [query, setQuery] = useState("");
+  const [isFilterVisible, setFilterVisible] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState(null);
+
+  const availableYears = useMemo(() => {
+    const years = new Set(
+      entries.map((e) => new Date(e.createdAt).getFullYear())
+    );
+    return [...years].sort((a, b) => b - a);
+  }, [entries]);
 
   const filteredEntries = useMemo(() => {
-    const trimmed = query.trim().toLowerCase();
-    if (!trimmed) {
-      return entries;
-    }
-
     return entries.filter((entry) => {
-      const haystack = `${entry.title} ${entry.content}`.toLowerCase();
-      return haystack.includes(trimmed);
+      const entryDate = new Date(entry.createdAt);
+      const matchesQuery =
+        !query.trim() ||
+        `${entry.title} ${entry.content}`
+          .toLowerCase()
+          .includes(query.trim().toLowerCase());
+
+      const matchesYear = !selectedYear || entryDate.getFullYear() === selectedYear;
+      const matchesMonth =
+        selectedMonth === null || entryDate.getMonth() === selectedMonth;
+
+      return matchesQuery && matchesYear && matchesMonth;
     });
-  }, [entries, query]);
+  }, [entries, query, selectedYear, selectedMonth]);
 
   const handleEdit = (entry) => {
     router.push({ pathname: "/post", params: { entryId: entry.id } });
@@ -142,17 +159,145 @@ export default function DiaryScreen() {
         <Text style={styles.brandText}>eDiary</Text>
       </View>
       <Text style={styles.title}>My Memories</Text>
-      <View style={styles.searchField}>
-        <Ionicons name="search" size={18} color="#7E7874" />
-        <TextInput
-          style={styles.searchInput}
-          placeholder={SEARCH_PLACEHOLDER}
-          placeholderTextColor="#B6ABA2"
-          value={query}
-          onChangeText={setQuery}
-        />
+      <View style={styles.searchRow}>
+        <View style={styles.searchField}>
+          <Ionicons name="search" size={18} color="#7E7874" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder={SEARCH_PLACEHOLDER}
+            placeholderTextColor="#B6ABA2"
+            value={query}
+            onChangeText={setQuery}
+          />
+        </View>
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            (selectedYear || selectedMonth !== null) && styles.filterActive,
+          ]}
+          onPress={() => setFilterVisible(true)}
+        >
+          <Ionicons
+            name="options-outline"
+            size={20}
+            color={selectedYear || selectedMonth !== null ? "#FFFFFF" : "#3C3148"}
+          />
+        </TouchableOpacity>
       </View>
     </View>
+  );
+
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const renderFilterModal = () => (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={isFilterVisible}
+      onRequestClose={() => setFilterVisible(false)}
+    >
+      <TouchableOpacity
+        style={styles.modalOverlay}
+        activeOpacity={1}
+        onPress={() => setFilterVisible(false)}
+      >
+        <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Filter Memories</Text>
+            <TouchableOpacity onPress={() => setFilterVisible(false)}>
+              <Ionicons name="close" size={24} color="#3C3148" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.filterSection}>
+            <Text style={styles.filterLabel}>Year</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.yearScroll}>
+               <TouchableOpacity
+                  style={[
+                    styles.yearChip,
+                    selectedYear === null && styles.yearChipActive,
+                  ]}
+                  onPress={() => setSelectedYear(null)}
+                >
+                  <Text
+                    style={[
+                      styles.yearChipText,
+                      selectedYear === null && styles.yearChipTextActive,
+                    ]}
+                  >
+                    All
+                  </Text>
+                </TouchableOpacity>
+              {availableYears.map((year) => (
+                <TouchableOpacity
+                  key={year}
+                  style={[
+                    styles.yearChip,
+                    selectedYear === year && styles.yearChipActive,
+                  ]}
+                  onPress={() => setSelectedYear(year === selectedYear ? null : year)}
+                >
+                  <Text
+                    style={[
+                      styles.yearChipText,
+                      selectedYear === year && styles.yearChipTextActive,
+                    ]}
+                  >
+                    {year}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          <View style={styles.filterSection}>
+            <Text style={styles.filterLabel}>Month</Text>
+            <View style={styles.monthGrid}>
+              {months.map((month, index) => (
+                <TouchableOpacity
+                  key={month}
+                  style={[
+                    styles.monthChip,
+                    selectedMonth === index && styles.monthChipActive,
+                  ]}
+                  onPress={() => setSelectedMonth(selectedMonth === index ? null : index)}
+                >
+                  <Text
+                    style={[
+                      styles.monthChipText,
+                      selectedMonth === index && styles.monthChipTextActive,
+                    ]}
+                  >
+                    {month.slice(0, 3)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.modalActions}>
+            <TouchableOpacity
+              style={styles.resetButton}
+              onPress={() => {
+                setSelectedYear(null);
+                setSelectedMonth(null);
+              }}
+            >
+              <Text style={styles.resetButtonText}>Reset</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.applyButton}
+              onPress={() => setFilterVisible(false)}
+            >
+              <Text style={styles.applyButtonText}>Apply Filter</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </TouchableOpacity>
+    </Modal>
   );
 
   return (
@@ -166,11 +311,12 @@ export default function DiaryScreen() {
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyText}>No diaries yet</Text>
+              <Text style={styles.emptyText}>No diaries found</Text>
             </View>
           }
           showsVerticalScrollIndicator={false}
         />
+        {renderFilterModal()}
       </View>
     </SafeAreaView>
   );
@@ -212,7 +358,12 @@ const styles = StyleSheet.create({
     color: "#3C3148",
     fontWeight: "700",
   },
+  searchRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
   searchField: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
@@ -221,7 +372,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: BORDER_COLOR,
     paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingVertical: 3,
+  },
+  filterButton: {
+    width: 44,
+    height: 45,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    backgroundColor: LIST_BG,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  filterActive: {
+    backgroundColor: "#3C3148",
+    borderColor: "#3C3148",
   },
   searchInput: {
     flex: 1,
@@ -287,5 +452,115 @@ const styles = StyleSheet.create({
   },
   entryActionButton: {
     padding: 6,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    justifyContent: "center",
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 24,
+    gap: 24,
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#3C3148",
+  },
+  filterSection: {
+    gap: 12,
+  },
+  filterLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#3C3148",
+  },
+  yearScroll: {
+    gap: 10,
+  },
+  yearChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "#F8F4F1",
+    borderWidth: 1,
+    borderColor: "#E6DAD1",
+  },
+  yearChipActive: {
+    backgroundColor: "#3C3148",
+    borderColor: "#3C3148",
+  },
+  yearChipText: {
+    fontSize: 14,
+    color: "#7E7874",
+    fontWeight: "500",
+  },
+  yearChipTextActive: {
+    color: "#FFFFFF",
+  },
+  monthGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  monthChip: {
+    width: "30%",
+    alignItems: "center",
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: "#F8F4F1",
+    borderWidth: 1,
+    borderColor: "#E6DAD1",
+  },
+  monthChipActive: {
+    backgroundColor: "#3C3148",
+    borderColor: "#3C3148",
+  },
+  monthChipText: {
+    fontSize: 13,
+    color: "#7E7874",
+    fontWeight: "500",
+  },
+  monthChipTextActive: {
+    color: "#FFFFFF",
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 12,
+  },
+  resetButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E6DAD1",
+    alignItems: "center",
+  },
+  resetButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#7E7874",
+  },
+  applyButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: "#3C3148",
+    alignItems: "center",
+  },
+  applyButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
 });
