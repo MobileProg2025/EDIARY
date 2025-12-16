@@ -1,7 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,6 +9,7 @@ import {
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useDiary } from "../../../context/diary-context";
+import CustomAlertModal from "../../../components/CustomAlertModal";
 
 const MOOD_META = {
   happy: { label: "Happy", color: "#F3C95C", icon: "emoticon-happy-outline" },
@@ -38,6 +38,36 @@ const formatEntryTimestamp = (value) =>
 export default function TrashScreen() {
   const { trashEntries, recoverEntry, deleteFromTrash, emptyTrash } = useDiary();
 
+  const [emptyModalVisible, setEmptyModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [selectedEntryId, setSelectedEntryId] = useState(null);
+
+  const confirmEmptyTrash = async () => {
+    await emptyTrash();
+    setEmptyModalVisible(false);
+  };
+
+  const handleDeletePress = (id) => {
+    setSelectedEntryId(id);
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDeleteEntry = async () => {
+    if (selectedEntryId) {
+      try {
+        await deleteFromTrash(selectedEntryId);
+      } catch (error) {
+        alert(
+          error.message ||
+            "Could not delete entry. Check your internet connection."
+        );
+      } finally {
+        setDeleteModalVisible(false);
+        setSelectedEntryId(null);
+      }
+    }
+  };
+
   const items = useMemo(
     () =>
       [...trashEntries].sort(
@@ -63,7 +93,7 @@ export default function TrashScreen() {
             <View style={styles.actionsRow}>
               <TouchableOpacity
                 style={styles.emptyButton}
-                onPress={emptyTrash}
+                onPress={() => setEmptyModalVisible(true)}
                 activeOpacity={0.85}
               >
                 <Text style={styles.emptyButtonText}>Empty Trash</Text>
@@ -105,30 +135,7 @@ export default function TrashScreen() {
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[styles.actionButton, styles.actionButtonDanger]}
-                        onPress={() => {
-                          Alert.alert(
-                            "Permanent Delete",
-                            "This action cannot be undone.",
-                            [
-                              {
-                                text: "Cancel",
-                                style: "cancel",
-                              },
-                              {
-                                text: "Delete",
-                                style: "destructive",
-                                onPress: async () => {
-                                  try {
-                                    await deleteFromTrash(entry.id);
-                                  } catch (error) {
-                                    alert(error.message || "Could not delete entry. Check your internet connection.");
-                                  }
-                                },
-                              },
-                            ],
-                            { cancelable: true }
-                          );
-                        }}
+                        onPress={() => handleDeletePress(entry.id)}
                         activeOpacity={0.85}
                       >
                         <Ionicons name="trash" size={16} color="#FFFFFF" />
@@ -149,6 +156,29 @@ export default function TrashScreen() {
           </View>
         )}
       </ScrollView>
+
+      <CustomAlertModal
+        visible={emptyModalVisible}
+        title="Empty Trash"
+        message="Are you sure you want to permanently delete all items in the trash? This action cannot be undone."
+        confirmText="Empty Trash"
+        isDelete={true}
+        onCancel={() => setEmptyModalVisible(false)}
+        onConfirm={confirmEmptyTrash}
+      />
+
+      <CustomAlertModal
+        visible={deleteModalVisible}
+        title="Permanent Delete"
+        message="Are you sure you want to permanently delete this entry? This action cannot be undone."
+        confirmText="Delete"
+        isDelete={true}
+        onCancel={() => {
+          setDeleteModalVisible(false);
+          setSelectedEntryId(null);
+        }}
+        onConfirm={confirmDeleteEntry}
+      />
     </SafeAreaView>
   );
 }
