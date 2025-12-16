@@ -4,6 +4,7 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
+
   Switch,
   Text,
   TouchableOpacity,
@@ -12,6 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../../context/auth-context";
+import CustomAlertModal from "../../../components/CustomAlertModal";
 
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -19,37 +21,25 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
+    setLogoutModalVisible(true);
+  };
+
+  const confirmLogout = async () => {
     if (isLoggingOut) {
       return;
     }
 
-    // Show confirmation dialog
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to log out?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Logout",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              setIsLoggingOut(true);
-              await logout();
-              router.replace("/login");
-            } finally {
-              setIsLoggingOut(false);
-            }
-          },
-        },
-      ],
-      { cancelable: true }
-    );
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      router.replace("/login");
+    } finally {
+      setIsLoggingOut(false);
+      setLogoutModalVisible(false);
+    }
   };
 
   return (
@@ -168,6 +158,16 @@ export default function SettingsScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <CustomAlertModal
+        visible={logoutModalVisible}
+        title="Logout"
+        message="Are you sure you want to log out?"
+        confirmText="Logout"
+        isDelete={false}
+        onCancel={() => setLogoutModalVisible(false)}
+        onConfirm={confirmLogout}
+      />
     </SafeAreaView>
   );
 }
