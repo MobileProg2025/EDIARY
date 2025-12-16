@@ -9,6 +9,7 @@ const API_CONFIGS = [
 ];
 
 // Change this index to switch between IPs (0, 1, 2, or 3)
-const ACTIVE_IP_INDEX = 0;
+const ACTIVE_IP_INDEX = 1;
+
 
 export const API_BASE_URL = API_CONFIGS[ACTIVE_IP_INDEX];

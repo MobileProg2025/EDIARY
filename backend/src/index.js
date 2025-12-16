@@ -21,7 +21,7 @@ app.use((req, res, next) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/diaries", diaryRoutes);
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server is running on PORT ${PORT}`);
     console.log(`Accessible at: http://10.0.0.34:${PORT}`);
     connectDB();
