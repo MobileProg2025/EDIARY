@@ -69,7 +69,7 @@ export default function DiaryViewScreen() {
                 setImageAspectRatio(width / height);
             }
         },
-        (error) => console.log("Failed to get image size", error)
+        (error) => console.warn("Failed to get image size", error)
       );
     }
   }, [entry?.imageUri]);
