@@ -1,27 +1,150 @@
-import { useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import * as Notifications from "expo-notifications";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   Alert,
+  Platform,
   ScrollView,
   StyleSheet,
-
   Switch,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { useAuth } from "../../../context/auth-context";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import CustomAlertModal from "../../../components/CustomAlertModal";
+import { useAuth } from "../../../context/auth-context";
+
+const ALARM_STORAGE_KEY = "@ediary:alarm_settings";
 
 export default function SettingsScreen() {
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [notificationTime, setNotificationTime] = useState(new Date());
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  
+  // Previously used theme state, kept if needed later
   const [selectedTheme, setSelectedTheme] = useState("light");
+  
   const router = useRouter();
   const { logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+
+  // Load saved settings
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(ALARM_STORAGE_KEY);
+        if (stored) {
+          const { enabled, time } = JSON.parse(stored);
+          setNotificationsEnabled(enabled);
+          setNotificationTime(new Date(time));
+        } else {
+            // Default: 9 PM
+            const defaultTime = new Date();
+            defaultTime.setHours(21, 0, 0, 0);
+            setNotificationTime(defaultTime);
+        }
+      } catch (e) {
+        console.warn("Failed to load alarm settings", e);
+      }
+    };
+    loadSettings();
+  }, []);
+
+  const registerForPushNotificationsAsync = async () => {
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+    }
+
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    
+    if (finalStatus !== 'granted') {
+      Alert.alert('Permission needed', 'Please enable notifications in your system settings.');
+      return false;
+    }
+    
+    return true;
+  };
+
+  const scheduleNotification = async (date) => {
+    await Notifications.cancelAllScheduledNotificationsAsync();
+
+    const trigger = {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour: date.getHours(),
+        minute: date.getMinutes(),
+    };
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "How was your day? 🌙",
+        body: "Take a moment to write in your diary.",
+        sound: true,
+      },
+      trigger,
+    });
+  };
+
+  const toggleSwitch = async (value) => {
+    if (value) {
+      // Turning ON
+      const hasPermission = await registerForPushNotificationsAsync();
+      if (hasPermission) {
+        await scheduleNotification(notificationTime);
+        setNotificationsEnabled(true);
+        saveSettings(true, notificationTime);
+      } else {
+        setNotificationsEnabled(false);
+      }
+    } else {
+      // Turning OFF
+      await Notifications.cancelAllScheduledNotificationsAsync();
+      setNotificationsEnabled(false);
+      saveSettings(false, notificationTime);
+    }
+  };
+
+  const onTimeChange = async (event, selectedDate) => {
+    setShowTimePicker(false);
+    if (selectedDate) {
+      setNotificationTime(selectedDate);
+      if (notificationsEnabled) {
+          await scheduleNotification(selectedDate);
+      }
+      saveSettings(notificationsEnabled, selectedDate);
+    }
+  };
+
+  const saveSettings = async (enabled, time) => {
+    try {
+      await AsyncStorage.setItem(ALARM_STORAGE_KEY, JSON.stringify({
+        enabled,
+        time: time.toISOString(),
+      }));
+    } catch (e) {
+      console.warn("Failed to save settings", e);
+    }
+  };
+
+  const formatTime = (date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   const handleLogout = () => {
     setLogoutModalVisible(true);
@@ -74,19 +197,41 @@ export default function SettingsScreen() {
                 color="#FFA36C"
                 style={styles.leadingIcon}
               />
-              <View style={styles.textGroup}>
+              <TouchableOpacity
+                style={styles.textGroup}
+                onPress={() => setShowTimePicker(true)}
+                activeOpacity={0.7}
+              >
                 <Text style={styles.cardPrimary}>Notifications</Text>
-                <Text style={styles.cardSecondary}>Remind me at 9 PM</Text>
-              </View>
+                <Text style={styles.cardSecondary}>
+                  {notificationsEnabled 
+                    ? `Daily reminder at ${formatTime(notificationTime)}`
+                    : "Daily reminders off"}
+                </Text>
+              </TouchableOpacity>
               <Switch
                 value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
+                onValueChange={toggleSwitch}
                 trackColor={{ false: "#D7CBC2", true: "#FFE0CC" }}
                 thumbColor={notificationsEnabled ? "#FFA36C" : "#F4F3F4"}
               />
             </View>
           </View>
         </View>
+
+        {(showTimePicker || (Platform.OS === 'ios' && showTimePicker)) && (
+            <DateTimePicker
+                value={notificationTime}
+                mode="time"
+                is24Hour={false}
+                display="default"
+                onChange={onTimeChange}
+            />
+        )}
+
+        {/* Hidden on Android, handled by onChange. If iOS, might want to show inside a Modal or conditional rendering. 
+            The above conditional renders standard picker on Android (dialog) or iOS (bottom spinner if display=spinner). 
+        */}
 
         <View style={styles.section}>
           <View style={styles.card}>
@@ -98,37 +243,6 @@ export default function SettingsScreen() {
             </View>
           </View>
         </View>
-
-        {/*<View style={styles.section}>
-          <View style={styles.card}>
-            <Text style={styles.sectionLabel}>Theme</Text>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => setSelectedTheme("light")}
-              style={[styles.row, styles.choiceRow]}
-            >
-              <Ionicons name="sunny" size={18} color="#FFA36C" />
-              <Text style={styles.cardPrimary}>Light</Text>
-              <View style={styles.radioOuter}>
-                {selectedTheme === "light" ? <View style={styles.radioInner} /> : null}
-              </View>
-            </TouchableOpacity>
-
-            <View style={styles.divider} />
-
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => setSelectedTheme("dark")}
-              style={[styles.row, styles.choiceRow]}
-            >
-              <Ionicons name="moon" size={18} color="#FFA36C" />
-              <Text style={styles.cardPrimary}>Dark</Text>
-              <View style={styles.radioOuter}>
-                {selectedTheme === "dark" ? <View style={styles.radioInner} /> : null}
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>*/}
 
         <View style={styles.section}>
           <View style={styles.card}>

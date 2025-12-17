@@ -1,5 +1,10 @@
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
+import * as ImagePicker from "expo-image-picker";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -9,9 +14,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { useFocusEffect } from "@react-navigation/native";
 import { useDiary } from "../../context/diary-context";
 
 const BG_COLOR = "#F8F4F1";
@@ -44,6 +46,7 @@ export default function PostScreen() {
     ? entryIdParam[0]
     : entryIdParam ?? undefined;
   const { entries, addEntry, updateEntry } = useDiary();
+  
   const existingEntry = useMemo(
     () => (entryId ? entries.find((item) => item.id === entryId) ?? null : null),
     [entries, entryId],
@@ -53,12 +56,16 @@ export default function PostScreen() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [imageUri, setImageUri] = useState(null);
+  const [imageAspectRatio, setImageAspectRatio] = useState(1);
+
+  const [permissionStatus, requestPermission] = ImagePicker.useMediaLibraryPermissions();
 
   const resetForm = useCallback(() => {
     setSelectedMood("");
     setTitle("");
     setContent("");
     setImageUri(null);
+    setImageAspectRatio(1);
   }, []);
 
   useEffect(() => {
@@ -66,7 +73,19 @@ export default function PostScreen() {
       setSelectedMood(existingEntry.mood ?? "");
       setTitle(existingEntry.title ?? "");
       setContent(existingEntry.content ?? "");
-      setImageUri(existingEntry.imageUri ?? null);
+      
+      const uri = existingEntry.imageUri ?? null;
+      setImageUri(uri);
+      
+      if (uri) {
+        Image.getSize(uri, (width, height) => {
+          if (width && height) {
+            setImageAspectRatio(width / height);
+          }
+        }, (error) => {
+            console.log("Failed to get image size", error);
+        });
+      }
     }
   }, [entryId, existingEntry]);
 
@@ -75,91 +94,126 @@ export default function PostScreen() {
       if (!entryId) {
         resetForm();
       }
-    }, [entryId, resetForm]),
+    }, [entryId, resetForm])
   );
 
   const moodEntries = useMemo(() => Object.entries(MOODS), []);
 
-  const handleToggleImage = () => {
-    setImageUri((prev) => (prev ? null : null));
+  const pickImage = async () => {
+    try {
+      if (permissionStatus?.status !== ImagePicker.PermissionStatus.GRANTED) {
+        const { status } = await requestPermission();
+        if (status !== ImagePicker.PermissionStatus.GRANTED) {
+          Alert.alert("Permission needed", "Please grant camera roll permissions to upload images.");
+          return;
+        }
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false, 
+        quality: 0.5,
+        base64: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        
+        if (asset.width && asset.height) {
+            setImageAspectRatio(asset.width / asset.height);
+        }
+
+        if (asset.base64) {
+          const prefix = "data:image/jpeg;base64,";
+          const newUri = asset.base64.startsWith("data:image") 
+            ? asset.base64 
+            : `${prefix}${asset.base64}`;
+          setImageUri(newUri);
+        } else {
+          setImageUri(asset.uri);
+          if (!asset.width || !asset.height) {
+             Image.getSize(asset.uri, (w, h) => setImageAspectRatio(w/h));
+          }
+        }
+      }
+    } catch (error) {
+      console.warn("Error picking image:", error);
+      Alert.alert("Error", "Failed to pick image");
+    }
+  };
+
+  const handleToggleImage = async () => {
+     await pickImage();
   };
 
   const handleSave = async () => {
-    const trimmedTitle = title.trim();
-    const trimmedContent = content.trim();
-
-    if (!trimmedTitle && !trimmedContent) {
+    if (!selectedMood) {
+      Alert.alert("Mood required", "Please select a mood for your diary entry.");
+      return;
+    }
+    if (!title.trim()) {
+      Alert.alert("Title required", "Please enter a title.");
+      return;
+    }
+    if (!content.trim()) {
+      Alert.alert("Content required", "Please enter some content.");
       return;
     }
 
-    try {
-      if (entryId && existingEntry) {
-        await updateEntry(entryId, {
-          mood: selectedMood,
-          title: trimmedTitle || "Untitled memory",
-          content: trimmedContent,
-          imageUri,
-        });
-      } else {
-        await addEntry({
-          mood: selectedMood,
-          title: trimmedTitle || "Untitled memory",
-          content: trimmedContent,
-          imageUri,
-        });
-      }
+    const entryData = {
+      mood: selectedMood,
+      title,
+      content,
+      imageUri,
+      // Use existing date if updating, else new date
+      date: existingEntry?.date ?? new Date().toISOString(),
+    };
 
-      // Only navigate away if save succeeded
-      resetForm();
-      router.setParams({ entryId: undefined });
-      router.replace("/diary");
-    } catch (error) {
-      // Show user-friendly error message
-      const errorMessage = error.message || "Something went wrong";
-      
-      // Customize message for common errors
-      let userMessage = errorMessage;
-      if (errorMessage.includes("logged in")) {
-        userMessage = "Please log in to save your diary";
-      } else if (errorMessage.includes("Failed")) {
-        userMessage = "Could not save. Check your internet connection.";
-      }
-      
-      alert(userMessage);
+    try {
+        if (existingEntry) {
+        await updateEntry(existingEntry.id, entryData);
+        } else {
+        await addEntry(entryData);
+        }
+        router.back();
+    } catch (e) {
+        console.error("Failed to save entry", e);
+        Alert.alert("Error", "Failed to save entry");
     }
   };
 
-  const screenTitle = entryId ? "Edit memory" : "Add memories";
-  const buttonLabel = entryId ? "Update" : "Save";
+  const buttonLabel = existingEntry ? "Update" : "Save";
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>{screenTitle}</Text>
+        <View style={styles.header}>
+            <Text style={styles.headerText}>How are you?</Text>
+        </View>
 
         <View style={styles.moodCard}>
-          <Text style={styles.moodLabel}>Mood</Text>
           <View style={styles.moodRow}>
             {moodEntries.map(([key, mood]) => {
               const isSelected = selectedMood === key;
+              const opacity = isSelected ? 1 : 0.3;
 
               return (
                 <TouchableOpacity
                   key={key}
+                  onPress={() => setSelectedMood(key)}
+                  activeOpacity={0.7}
                   style={[
                     styles.moodOption,
                     {
                       backgroundColor: mood.background,
                       borderColor: BORDER_BLACK,
+                      opacity,
                     },
                     isSelected && styles.moodOptionSelected,
                   ]}
-                  onPress={() => setSelectedMood(key)}
-                  accessibilityLabel={`Mood ${mood.label}`}
                 >
                   <MaterialCommunityIcons
                     name={MOOD_ICONS[mood.icon]}
@@ -177,28 +231,29 @@ export default function PostScreen() {
           <TextInput
             style={styles.titleInput}
             placeholder="Title"
-            placeholderTextColor="#B6ABA2"
+            placeholderTextColor="#999"
             value={title}
             onChangeText={setTitle}
           />
+          <View style={styles.divider} />
           <TextInput
             style={styles.bodyInput}
-            placeholder="Start typing"
-            placeholderTextColor="#B6ABA2"
-            value={content}
-            onChangeText={setContent}
+            placeholder="Write your thoughts..."
+            placeholderTextColor="#999"
             multiline
             textAlignVertical="top"
+            value={content}
+            onChangeText={setContent}
           />
         </View>
 
         <TouchableOpacity
-          style={styles.imageCard}
+          style={[styles.imageCard, imageUri && { height: undefined, aspectRatio: imageAspectRatio, backgroundColor: 'transparent' }]}
           onPress={handleToggleImage}
           activeOpacity={0.85}
         >
           {imageUri ? (
-            <Image source={{ uri: imageUri }} style={styles.previewImage} />
+            <Image source={{ uri: imageUri }} style={[styles.previewImage, { aspectRatio: imageAspectRatio }]} />
           ) : (
             <View style={styles.imagePlaceholder}>
               <Ionicons name="image-outline" size={20} color="#3C3148" />
@@ -226,11 +281,14 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
     gap: 15,
   },
-  title: {
-    fontSize: 26,
+  header: {
+    alignItems: "center",
+    marginBottom: 5,
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: "600",
     color: "#3C3148",
-    textAlign: "center",
-    fontWeight: "700",
   },
   moodCard: {
     backgroundColor: CARD_COLOR,
@@ -241,12 +299,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     gap: 10,
     alignItems: "center",
-  },
-  moodLabel: {
-    fontSize: 20,
-    color: "#3C3148",
-    textAlign: "center",
-    fontWeight: "600",
   },
   moodRow: {
     flexDirection: "row",
@@ -285,22 +337,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     gap: 10,
+    minHeight: 200,
   },
   titleInput: {
-    fontSize: 16,
+    fontSize: 18,
     color: "#3C3148",
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER_COLOR,
-    paddingBottom: 8,
-    fontWeight: "600",
+    fontWeight: "700",
+    paddingBottom: 4,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: BORDER_COLOR,
+    width: "100%",
   },
   bodyInput: {
     fontSize: 16,
     color: "#3C3148",
-    minHeight: 180,
+    lineHeight: 24,
+    minHeight: 150,
   },
   imageCard: {
-    height: 120,
+    height: 120, 
     borderRadius: 12,
     backgroundColor: "#E9D8C7",
     alignItems: "center",
@@ -310,6 +367,9 @@ const styles = StyleSheet.create({
   imagePlaceholder: {
     alignItems: "center",
     gap: 8,
+    width: "100%", 
+    height: "100%",
+    justifyContent: "center",
   },
   imagePlaceholderText: {
     fontSize: 14,
@@ -318,8 +378,8 @@ const styles = StyleSheet.create({
   },
   previewImage: {
     width: "100%",
-    height: "100%",
-    resizeMode: "cover",
+    height: undefined, 
+    resizeMode: "contain",
   },
   saveButton: {
     backgroundColor: SAVE_COLOR,

@@ -1,11 +1,20 @@
-import { useEffect } from "react";
-import * as SplashScreen from "expo-splash-screen";
+import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
 import { AuthProvider } from "../context/auth-context";
 
 import { DiaryProvider } from "../context/diary-context";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 export default function RootLayout() {
   useEffect(() => {

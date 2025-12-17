@@ -1,15 +1,14 @@
-import { useMemo } from "react";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
 import {
   Image,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter, useLocalSearchParams } from "expo-router";
 import { useDiary } from "../context/diary-context";
 
 const BG_COLOR = "#F8F4F1";
@@ -54,11 +53,26 @@ export default function DiaryViewScreen() {
     ? entryIdParam[0]
     : entryIdParam ?? undefined;
   const { entries } = useDiary();
+  const [imageAspectRatio, setImageAspectRatio] = useState(1);
   
   const entry = useMemo(
     () => (entryId ? entries.find((item) => item.id === entryId) ?? null : null),
     [entries, entryId],
   );
+
+  useEffect(() => {
+    if (entry?.imageUri) {
+      Image.getSize(
+        entry.imageUri,
+        (width, height) => {
+            if (width && height) {
+                setImageAspectRatio(width / height);
+            }
+        },
+        (error) => console.log("Failed to get image size", error)
+      );
+    }
+  }, [entry?.imageUri]);
 
   const moodEntries = useMemo(() => Object.entries(MOODS), []);
 
@@ -124,8 +138,11 @@ export default function DiaryViewScreen() {
         </View>
 
         {entry.imageUri ? (
-          <View style={styles.imageCard}>
-            <Image source={{ uri: entry.imageUri }} style={styles.previewImage} />
+          <View style={[styles.imageCard, { height: undefined, aspectRatio: imageAspectRatio, backgroundColor: 'transparent' }]}>
+            <Image 
+                source={{ uri: entry.imageUri }} 
+                style={[styles.previewImage, { aspectRatio: imageAspectRatio }]} 
+            />
           </View>
         ) : null}
       </ScrollView>
@@ -253,7 +270,7 @@ const styles = StyleSheet.create({
   },
   previewImage: {
     width: "100%",
-    height: "100%",
-    resizeMode: "cover",
+    height: undefined,
+    resizeMode: "contain",
   },
 });
