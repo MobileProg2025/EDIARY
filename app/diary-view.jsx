@@ -65,7 +65,7 @@ export default function DiaryViewScreen() {
       Image.getSize(
         entry.imageUri,
         (width, height) => {
-            if (width && height) {
+            if (width && height > 0) {
                 setImageAspectRatio(width / height);
             }
         },
