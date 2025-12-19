@@ -83,7 +83,7 @@ export default function PostScreen() {
             setImageAspectRatio(width / height);
           }
         }, (error) => {
-            console.log("Failed to get image size", error);
+            console.warn("Failed to get image size", error);
         });
       }
     }

@@ -65,11 +65,11 @@ export default function DiaryViewScreen() {
       Image.getSize(
         entry.imageUri,
         (width, height) => {
-            if (width && height) {
+            if (width && height > 0) {
                 setImageAspectRatio(width / height);
             }
         },
-        (error) => console.log("Failed to get image size", error)
+        (error) => console.warn("Failed to get image size", error)
       );
     }
   }, [entry?.imageUri]);
