@@ -142,28 +142,6 @@ export default function Login() {
                 Sign Up
               </Link>
             </View>
-
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            <TouchableOpacity style={styles.socialButton}>
-              <Image
-              source = {require("../assets/images/google.png")}
-              style={styles.socialLogo}
-              />
-              <Text style={styles.socialText}>Continue with Google</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.socialButton}>
-              <Image
-              source = {require("../assets/images/facebook.png")}
-              style={styles.socialLogo}
-              />
-              <Text style={styles.socialText}>Continue with Facebook</Text>
-            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -183,6 +161,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 32,
     paddingVertical: 45,
+    justifyContent: "center",
   },
   logoContainer: {
     alignItems: "center",
@@ -201,7 +180,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   labelSpacing: {
-    marginTop: 24,
+    marginTop: 10,
   },
   inputWrapper: {
     flexDirection: "row",
@@ -272,47 +251,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#3C4BF2",
     fontWeight: "600",
-  },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 20,
-    marginBottom: 20,
-    gap: 12,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#D9D9D9",
-  },
-  dividerText: {
-    fontSize: 12,
-    color: "#6F6F6F",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  socialButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    paddingVertical: 15,
-    marginBottom: 12,
-    gap: 10,
-    elevation: 1,
-  },
-  socialLogo: {
-    width: 20,  
-    height: 20,
-    marginRight: 10, 
-    resizeMode: "contain",
-  },
-  socialText: {
-    fontSize: 15,
-    color: "#161616",
-    fontWeight: "500",
   },
 });

@@ -19,8 +19,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import CustomAlertModal from "../../../components/CustomAlertModal";
 import { useAuth } from "../../../context/auth-context";
 
-const ALARM_STORAGE_KEY = "@ediary:alarm_settings";
-
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notificationTime, setNotificationTime] = useState(new Date());
@@ -30,31 +28,36 @@ export default function SettingsScreen() {
   const [selectedTheme, setSelectedTheme] = useState("light");
   
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
   // Load saved settings
   useEffect(() => {
     const loadSettings = async () => {
+      if (!user?.id) return;
+      
       try {
+        // User-specific storage key
+        const ALARM_STORAGE_KEY = `@ediary:alarm_settings:${user.id}`;
         const stored = await AsyncStorage.getItem(ALARM_STORAGE_KEY);
         if (stored) {
           const { enabled, time } = JSON.parse(stored);
           setNotificationsEnabled(enabled);
           setNotificationTime(new Date(time));
         } else {
-            // Default: 9 PM
+            // Default: 9 PM, notifications DISABLED for new users
             const defaultTime = new Date();
             defaultTime.setHours(21, 0, 0, 0);
             setNotificationTime(defaultTime);
+            setNotificationsEnabled(false);
         }
       } catch (e) {
         console.warn("Failed to load alarm settings", e);
       }
     };
     loadSettings();
-  }, []);
+  }, [user?.id]);
 
   const registerForPushNotificationsAsync = async () => {
     if (Platform.OS === 'android') {
@@ -132,7 +135,11 @@ export default function SettingsScreen() {
   };
 
   const saveSettings = async (enabled, time) => {
+    if (!user?.id) return;
+    
     try {
+      // User-specific storage key
+      const ALARM_STORAGE_KEY = `@ediary:alarm_settings:${user.id}`;
       await AsyncStorage.setItem(ALARM_STORAGE_KEY, JSON.stringify({
         enabled,
         time: time.toISOString(),

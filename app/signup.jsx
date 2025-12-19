@@ -25,6 +25,7 @@ export default function Signup() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const { signup, isAuthenticated, initializing } = useAuth();
 
   useEffect(() => {
@@ -92,7 +93,14 @@ export default function Signup() {
         password: trimmedPassword,
         username,
       });
-      router.replace("/home");
+      // Show success message
+      setShowSuccess(true);
+      setError("");
+      
+      // Redirect to login page after 2 seconds
+      setTimeout(() => {
+        router.replace("/login");
+      }, 2000);
     } catch (signupError) {
       const message =
         signupError instanceof Error
@@ -122,6 +130,18 @@ export default function Signup() {
               resizeMode="contain"
             />
           </View>
+
+          {showSuccess && (
+            <View style={styles.successContainer}>
+              <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+              <Text style={styles.successText}>
+                Account created successfully!
+              </Text>
+              <Text style={styles.successSubText}>
+                Redirecting to login page...
+              </Text>
+            </View>
+          )}
 
           <View style={styles.form}>
             <Text style={[styles.label, styles.sectionSpacing]}>
@@ -253,6 +273,28 @@ const styles = StyleSheet.create({
     width: 92,
     height: 92,
   },
+  successContainer: {
+    backgroundColor: "#E8F5E9",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#4CAF50",
+  },
+  successText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#2E7D32",
+    marginTop: 8,
+    textAlign: "center",
+  },
+  successSubText: {
+    fontSize: 14,
+    color: "#66BB6A",
+    marginTop: 4,
+    textAlign: "center",
+  },
   form: {
     backgroundColor: "#F8F4F1",
   },
@@ -262,7 +304,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   sectionSpacing: {
-    marginTop: 17,
+    marginTop: 10,
   },
   inputWrapper: {
     flexDirection: "row",

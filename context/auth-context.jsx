@@ -73,15 +73,8 @@ export function AuthProvider({ children }) {
         throw new Error(data.message || "Failed to create account.");
       }
 
-      // Store token and user data
-      await AsyncStorage.multiSet([
-        [TOKEN_KEY, data.token],
-        [USER_KEY, JSON.stringify(data.user)],
-      ]);
-
-      console.log("Signup successful!");
-      setToken(data.token);
-      setUser(data.user);
+      // Do NOT auto-login - user must manually login after signup
+      console.log("Signup successful! User must now log in manually.");
       return data.user;
     } catch (error) {
       console.error("Signup error:", error);
