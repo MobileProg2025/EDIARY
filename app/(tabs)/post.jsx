@@ -4,14 +4,14 @@ import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Alert,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDiary } from "../../context/diary-context";
@@ -132,7 +132,13 @@ export default function PostScreen() {
         } else {
           setImageUri(asset.uri);
           if (!asset.width || !asset.height) {
-             Image.getSize(asset.uri, (w, h) => setImageAspectRatio(w/h));
+             Image.getSize(
+                asset.uri,
+                (w, h) => {
+                  if (h > 0) setImageAspectRatio(w / h);
+                },
+                (err) => console.warn("Failed to get image size", err)
+              );
           }
         }
       }
