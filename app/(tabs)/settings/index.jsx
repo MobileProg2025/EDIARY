@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Alert,
   Platform,
@@ -32,15 +32,18 @@ export default function SettingsScreen() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
+  // Helper function to get user-specific storage key
+  const getStorageKey = useCallback((userId) => {
+    return `@ediary:alarm_settings:${userId}`;
+  }, []);
+
   // Load saved settings
   useEffect(() => {
     const loadSettings = async () => {
       if (!user?.id) return;
       
       try {
-        // User-specific storage key
-        const ALARM_STORAGE_KEY = `@ediary:alarm_settings:${user.id}`;
-        const stored = await AsyncStorage.getItem(ALARM_STORAGE_KEY);
+        const stored = await AsyncStorage.getItem(getStorageKey(user.id));
         if (stored) {
           const { enabled, time } = JSON.parse(stored);
           setNotificationsEnabled(enabled);
@@ -57,7 +60,7 @@ export default function SettingsScreen() {
       }
     };
     loadSettings();
-  }, [user?.id]);
+  }, [user?.id, getStorageKey]);
 
   const registerForPushNotificationsAsync = async () => {
     if (Platform.OS === 'android') {
@@ -138,9 +141,7 @@ export default function SettingsScreen() {
     if (!user?.id) return;
     
     try {
-      // User-specific storage key
-      const ALARM_STORAGE_KEY = `@ediary:alarm_settings:${user.id}`;
-      await AsyncStorage.setItem(ALARM_STORAGE_KEY, JSON.stringify({
+      await AsyncStorage.setItem(getStorageKey(user.id), JSON.stringify({
         enabled,
         time: time.toISOString(),
       }));

@@ -62,6 +62,18 @@ export default function Signup() {
     }
   };
 
+  // Handle redirect after successful signup
+  useEffect(() => {
+    if (!showSuccess) return;
+
+    const timeoutId = setTimeout(() => {
+      router.replace("/login");
+    }, 2000);
+
+    // Cleanup timeout if component unmounts
+    return () => clearTimeout(timeoutId);
+  }, [showSuccess, router]);
+
   const handleSignup = async () => {
     if (isSubmitting) {
       return;
@@ -93,14 +105,9 @@ export default function Signup() {
         password: trimmedPassword,
         username,
       });
-      // Show success message
+      // Show success message (redirect handled by useEffect)
       setShowSuccess(true);
       setError("");
-      
-      // Redirect to login page after 2 seconds
-      setTimeout(() => {
-        router.replace("/login");
-      }, 2000);
     } catch (signupError) {
       const message =
         signupError instanceof Error
