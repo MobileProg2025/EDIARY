@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Alert,
   Platform,
@@ -19,8 +19,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import CustomAlertModal from "../../../components/CustomAlertModal";
 import { useAuth } from "../../../context/auth-context";
 
-const ALARM_STORAGE_KEY = "@ediary:alarm_settings";
-
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notificationTime, setNotificationTime] = useState(new Date());
@@ -30,31 +28,39 @@ export default function SettingsScreen() {
   const [selectedTheme, setSelectedTheme] = useState("light");
   
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+
+  // Helper function to get user-specific storage key
+  const getStorageKey = useCallback((userId) => {
+    return `@ediary:alarm_settings:${userId}`;
+  }, []);
 
   // Load saved settings
   useEffect(() => {
     const loadSettings = async () => {
+      if (!user?.id) return;
+      
       try {
-        const stored = await AsyncStorage.getItem(ALARM_STORAGE_KEY);
+        const stored = await AsyncStorage.getItem(getStorageKey(user.id));
         if (stored) {
           const { enabled, time } = JSON.parse(stored);
           setNotificationsEnabled(enabled);
           setNotificationTime(new Date(time));
         } else {
-            // Default: 9 PM
+            // Default: 9 PM, notifications DISABLED for new users
             const defaultTime = new Date();
             defaultTime.setHours(21, 0, 0, 0);
             setNotificationTime(defaultTime);
+            setNotificationsEnabled(false);
         }
       } catch (e) {
         console.warn("Failed to load alarm settings", e);
       }
     };
     loadSettings();
-  }, []);
+  }, [user?.id, getStorageKey]);
 
   const registerForPushNotificationsAsync = async () => {
     if (Platform.OS === 'android') {
@@ -132,8 +138,10 @@ export default function SettingsScreen() {
   };
 
   const saveSettings = async (enabled, time) => {
+    if (!user?.id) return;
+    
     try {
-      await AsyncStorage.setItem(ALARM_STORAGE_KEY, JSON.stringify({
+      await AsyncStorage.setItem(getStorageKey(user.id), JSON.stringify({
         enabled,
         time: time.toISOString(),
       }));

@@ -1,6 +1,7 @@
 import express from "express";
 import Diary from "../models/Diaries.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
+import cloudinary from "../lib/cloudinary.js";
 
 const router = express.Router();
 
@@ -46,11 +47,27 @@ router.post("/", async (req, res) => {
             return res.status(400).json({ message: "Title and content are required" });
         }
 
+        let uploadedImageUri = null;
+
+        // Upload image to Cloudinary if provided
+        if (imageUri && imageUri.startsWith("data:image")) {
+            try {
+                const uploadResponse = await cloudinary.uploader.upload(imageUri, {
+                    folder: "ediary_images",
+                });
+                uploadedImageUri = uploadResponse.secure_url;
+                console.log("Image uploaded to Cloudinary:", uploadedImageUri);
+            } catch (uploadError) {
+                console.error("Error uploading to Cloudinary:", uploadError);
+                return res.status(500).json({ message: "Failed to upload image" });
+            }
+        }
+
         const diary = new Diary({
             mood: mood || "calm",
             title,
             content,
-            imageUri: imageUri || null,
+            imageUri: uploadedImageUri,
             user: req.user._id,
         });
 
@@ -87,9 +104,30 @@ router.put("/:id", async (req, res) => {
     try {
         const { mood, title, content, imageUri } = req.body;
 
+        let uploadedImageUri = imageUri;
+
+        // Upload image to Cloudinary if it's a new base64 image
+        if (imageUri && imageUri.startsWith("data:image")) {
+            try {
+                const uploadResponse = await cloudinary.uploader.upload(imageUri, {
+                    folder: "ediary_images",
+                });
+                uploadedImageUri = uploadResponse.secure_url;
+                console.log("Image uploaded to Cloudinary:", uploadedImageUri);
+            } catch (uploadError) {
+                console.error("Error uploading to Cloudinary:", uploadError);
+                return res.status(500).json({ message: "Failed to upload image" });
+            }
+        }
+
+        const updateData = {
+            ...req.body,
+            imageUri: uploadedImageUri,
+        };
+
         const diary = await Diary.findOneAndUpdate(
             { _id: req.params.id, user: req.user._id },
-            { $set: req.body },
+            { $set: updateData },
             { new: true, runValidators: true }
         );
 

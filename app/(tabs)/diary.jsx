@@ -149,6 +149,26 @@ export default function DiaryScreen() {
               {item.content}
             </Text>
           ) : null}
+          <View style={styles.gridEntryActions}>
+            <TouchableOpacity
+              style={styles.gridActionButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                handleEdit(item);
+              }}
+            >
+              <Ionicons name="create-outline" size={16} color="#137bfaff" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.gridActionButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                handleDelete(item);
+              }}
+            >
+              <Ionicons name="trash-outline" size={16} color="#F37A74" />
+            </TouchableOpacity>
+          </View>
         </TouchableOpacity>
       );
     }
@@ -554,6 +574,19 @@ const styles = StyleSheet.create({
   gridEntryExcerpt: {
     fontSize: 12,
     color: "#7E7874",
+  },
+  gridEntryActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 8,
+    marginTop: 4,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#E6DAD1",
+  },
+  gridActionButton: {
+    padding: 2,
   },
   modalOverlay: {
     flex: 1,

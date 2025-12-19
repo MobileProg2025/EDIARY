@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDiary } from "../../context/diary-context";
+import { useAuth } from "../../context/auth-context";
 
 const BG_COLOR = "#F8F4F1";
 const CARD_COLOR = "#FEFEFC";
@@ -46,6 +47,7 @@ export default function PostScreen() {
     ? entryIdParam[0]
     : entryIdParam ?? undefined;
   const { entries, addEntry, updateEntry } = useDiary();
+  const { user } = useAuth();
   
   const existingEntry = useMemo(
     () => (entryId ? entries.find((item) => item.id === entryId) ?? null : null),
@@ -181,7 +183,7 @@ export default function PostScreen() {
         } else {
         await addEntry(entryData);
         }
-        router.back();
+        router.replace("/diary");
     } catch (e) {
         console.error("Failed to save entry", e);
         Alert.alert("Error", "Failed to save entry");
@@ -197,14 +199,17 @@ export default function PostScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-            <Text style={styles.headerText}>How are you?</Text>
+            <Text style={styles.headerText}>
+              What's on your mind, {user?.username || 'there'}?
+            </Text>
         </View>
 
         <View style={styles.moodCard}>
           <View style={styles.moodRow}>
             {moodEntries.map(([key, mood]) => {
               const isSelected = selectedMood === key;
-              const opacity = isSelected ? 1 : 0.3;
+              // Only apply dimming/blur effect when viewing existing entries
+              const opacity = existingEntry ? (isSelected ? 1 : 0.3) : 1;
 
               return (
                 <TouchableOpacity
@@ -290,11 +295,13 @@ const styles = StyleSheet.create({
   header: {
     alignItems: "center",
     marginBottom: 5,
+    textAlign: "center",
   },
   headerText: {
     fontSize: 24,
     fontWeight: "600",
     color: "#3C3148",
+    textAlign: "center",
   },
   moodCard: {
     backgroundColor: CARD_COLOR,
